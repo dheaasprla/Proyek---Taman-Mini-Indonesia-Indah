@@ -38,13 +38,14 @@ data class FeatureItem(
 
 @Composable
 fun HomeScreen(
-    onNavigateToParking: () -> Unit // Parameter untuk navigasi ke ParkingScreen
+    onNavigateToParking: () -> Unit,
+    onNavigateToCanteen: () -> Unit // Tambahkan parameter ini
 ) {
     val featureItems = listOf(
         FeatureItem(R.drawable.pintumasuk, "Pintu Masuk"),
-        FeatureItem(R.drawable.parkir, "Parkir") { onNavigateToParking() }, // Panggil onNavigateToParking saat card Parkir diklik
+        FeatureItem(R.drawable.parkir, "Parkir") { onNavigateToParking() },
         FeatureItem(R.drawable.destinasi, "Destinasi"),
-        FeatureItem(R.drawable.kantin, "Kantin")
+        FeatureItem(R.drawable.kantin, "Kantin") { onNavigateToCanteen() } // Hubungkan ke Canteen
     )
 
     val gradientTextStyle = TextStyle(
@@ -129,14 +130,15 @@ fun HomeScreen(
 fun FeatureGridCard(
     iconRes: Int,
     text: String,
-    onClick: () -> Unit // Tambahkan parameter onClick
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Card(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .height(150.dp)
             .border(2.dp, Color.Red, RoundedCornerShape(16.dp))
-            .clickable(onClick = onClick), // Tambahkan klik ke card
+            .clickable(onClick = onClick),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White)
@@ -168,6 +170,9 @@ fun FeatureGridCard(
 @Composable
 fun HomeScreenPreview() {
     ProyekTMIITheme {
-        HomeScreen(onNavigateToParking = {}) // Tambahkan parameter default untuk preview
+        HomeScreen(
+            onNavigateToParking = {},
+            onNavigateToCanteen = {} // Tambahkan parameter default untuk preview
+        )
     }
 }

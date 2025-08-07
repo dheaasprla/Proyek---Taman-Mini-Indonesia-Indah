@@ -4,6 +4,7 @@ package com.example.proyektmii.ui.screens
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -19,7 +20,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.TextStyle // Import TextStyle
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -31,14 +32,17 @@ import com.example.proyektmii.ui.theme.ProyekTMIITheme
 
 data class FeatureItem(
     val iconRes: Int,
-    val text: String
+    val text: String,
+    val onClick: () -> Unit = {} // Tambahkan onClick opsional
 )
 
 @Composable
-fun HomeScreen() {
+fun HomeScreen(
+    onNavigateToParking: () -> Unit // Parameter untuk navigasi ke ParkingScreen
+) {
     val featureItems = listOf(
         FeatureItem(R.drawable.pintumasuk, "Pintu Masuk"),
-        FeatureItem(R.drawable.parkir, "Parkir"),
+        FeatureItem(R.drawable.parkir, "Parkir") { onNavigateToParking() }, // Panggil onNavigateToParking saat card Parkir diklik
         FeatureItem(R.drawable.destinasi, "Destinasi"),
         FeatureItem(R.drawable.kantin, "Kantin")
     )
@@ -77,7 +81,8 @@ fun HomeScreen() {
                 items(featureItems) { item ->
                     FeatureGridCard(
                         iconRes = item.iconRes,
-                        text = item.text
+                        text = item.text,
+                        onClick = item.onClick // Hubungkan onClick dari data item
                     )
                 }
             }
@@ -121,12 +126,17 @@ fun HomeScreen() {
 }
 
 @Composable
-fun FeatureGridCard(iconRes: Int, text: String) {
+fun FeatureGridCard(
+    iconRes: Int,
+    text: String,
+    onClick: () -> Unit // Tambahkan parameter onClick
+) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .height(150.dp)
-            .border(2.dp, Color.Red, RoundedCornerShape(16.dp)),
+            .border(2.dp, Color.Red, RoundedCornerShape(16.dp))
+            .clickable(onClick = onClick), // Tambahkan klik ke card
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White)
@@ -158,6 +168,6 @@ fun FeatureGridCard(iconRes: Int, text: String) {
 @Composable
 fun HomeScreenPreview() {
     ProyekTMIITheme {
-        HomeScreen()
+        HomeScreen(onNavigateToParking = {}) // Tambahkan parameter default untuk preview
     }
 }

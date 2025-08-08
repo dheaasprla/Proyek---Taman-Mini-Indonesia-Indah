@@ -16,11 +16,11 @@ import com.example.proyektmii.ui.theme.ProyekTMIITheme
 class MainActivity : ComponentActivity() {
     private var nfcAdapter: NfcAdapter? = null
 
-    // State untuk Pintu Masuk
+    // State Pintu Masuk
     private var isNfcTapped by mutableStateOf(false)
     private var showPintuMasukScreen by mutableStateOf(false)
 
-    // State untuk Kantin
+    // State Kantin
     private var showCanteenMenuScreen by mutableStateOf(false)
     private var showCartScreen by mutableStateOf(false)
     private var showPaymentScreen by mutableStateOf(false)
@@ -28,6 +28,20 @@ class MainActivity : ComponentActivity() {
     private var cartItems by mutableStateOf(listOf<CartItem>())
     private var totalPrice by mutableStateOf(0)
     private var nfcTappedForPayment by mutableStateOf(false)
+
+    // State Parkir
+    private var showParkingScreen by mutableStateOf(false)
+    private var showThankYouScreen by mutableStateOf(false)
+    private var parkingCost by mutableStateOf(0)
+    private var parkingEntryTime by mutableStateOf<Long?>(null)
+    private var isCheckedIn by mutableStateOf(false)
+
+    // State Destinasi/Tiket
+    private var showDestinationMenuScreen by mutableStateOf(false)
+    private var showDestinationSelectionScreen by mutableStateOf(false)
+    private var showTicketCartScreen by mutableStateOf(false) // New state
+    private var selectedTicket by mutableStateOf<TicketItem?>(null)
+    private var isWahanaSelected by mutableStateOf(false)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -53,30 +67,39 @@ class MainActivity : ComponentActivity() {
                 }
 
                 when {
-                    // Pintu Masuk Sukses
+                    // ✅ Pintu Masuk Sukses
                     showPintuMasukSuksesScreen -> {
                         PintuMasukSuksesScreen(
                             onBackToHome = { showPintuMasukSuksesScreen = false }
                         )
                     }
-                    // Pintu Masuk
+                    // ✅ Pintu Masuk
                     showPintuMasukScreen -> {
                         PintuMasukScreen(
                             onBack = { showPintuMasukScreen = false }
                         )
                     }
-                    // Pembayaran Kantin sukses
+                    // ✅ Pembayaran sukses (Kantin, Parkir, atau Tiket)
                     showPaymentSuccessScreen -> {
                         PaymentSuccessScreen(
                             totalPrice = totalPrice,
                             onBackToHome = {
                                 showPaymentSuccessScreen = false
                                 cartItems = emptyList()
+                                selectedTicket = null
                                 totalPrice = 0
+                                showDestinationMenuScreen = false
+                                parkingEntryTime = null
+                                isCheckedIn = false
+                            },
+                            successMessage = when {
+                                selectedTicket != null -> "Pembayaran Tiket Berhasil"
+                                parkingCost > 0 -> "Pembayaran Parkir Berhasil"
+                                else -> "Pembayaran Berhasil"
                             }
                         )
                     }
-                    // Layar Pembayaran Kantin
+                    // ✅ Layar Pembayaran (NFC untuk semua)
                     showPaymentScreen -> {
                         PaymentScreen(
                             totalPrice = totalPrice,
@@ -89,7 +112,25 @@ class MainActivity : ComponentActivity() {
                             }
                         )
                     }
-                    // Keranjang Kantin
+                    // ✅ Pembayaran Tiket
+                    showTicketCartScreen -> {
+                        TicketCartScreen(
+                            ticketItem = selectedTicket,
+                            onProceedToPayment = { price ->
+                                totalPrice = price
+                                showTicketCartScreen = false
+                                showPaymentScreen = true
+                            },
+                            onBack = {
+                                showTicketCartScreen = false
+                                showDestinationSelectionScreen = true
+                            },
+                            onUpdateQuantity = { newQuantity ->
+                                selectedTicket = selectedTicket?.copy(quantity = newQuantity)
+                            }
+                        )
+                    }
+                    // ✅ Keranjang Kantin
                     showCartScreen -> {
                         CartScreen(
                             cartItems = cartItems,
@@ -118,7 +159,7 @@ class MainActivity : ComponentActivity() {
                             modifier = Modifier
                         )
                     }
-                    // Menu Kantin
+                    // ✅ Menu Kantin
                     showCanteenMenuScreen -> {
                         CanteenMenuScreen(
                             onProceedToCart = { items ->
@@ -126,22 +167,82 @@ class MainActivity : ComponentActivity() {
                                 showCanteenMenuScreen = false
                                 showCartScreen = true
                             },
+                            onBack = { showCanteenMenuScreen = false }
+                        )
+                    }
+                    // ✅ Pilih Destinasi
+                    showDestinationSelectionScreen -> {
+                        DestinationSelectionScreen(
+                            isWahana = isWahanaSelected,
+                            onProceedToCart = { ticket ->
+                                selectedTicket = ticket
+                                showDestinationSelectionScreen = false
+                                showTicketCartScreen = true // Go to cart instead of direct payment
+                            },
                             onBack = {
-                                showCanteenMenuScreen = false
+                                showDestinationSelectionScreen = false
+                                showDestinationMenuScreen = true
                             }
                         )
                     }
-                    // Onboarding
+                    // ✅ Menu Destinasi
+                    showDestinationMenuScreen -> {
+                        DestinationMenuScreen(
+                            onNavigateToWahana = {
+                                isWahanaSelected = true
+                                showDestinationMenuScreen = false
+                                showDestinationSelectionScreen = true
+                            },
+                            onNavigateToMuseum = {
+                                isWahanaSelected = false
+                                showDestinationMenuScreen = false
+                                showDestinationSelectionScreen = true
+                            },
+                            onBack = {
+                                showDestinationMenuScreen = false
+                            }
+                        )
+                    }
+
+                    // ✅ Parkir
+                    showParkingScreen -> {
+                        ParkingScreen(
+                            nfcTapped = nfcTappedForPayment,
+                            parkingEntryTime = parkingEntryTime,
+                            isCheckedIn = isCheckedIn,
+                            onNfcProcessed = { nfcTappedForPayment = false },
+                            onCheckIn = { time ->
+                                parkingEntryTime = time
+                                isCheckedIn = true
+                            },
+                            onCheckOut = { cost ->
+                                parkingCost = cost
+                                totalPrice = cost
+                                showParkingScreen = false
+                                showPaymentScreen = true
+                            }
+                        )
+                    }
+                    // ✅ Layar Terima Kasih Parkir
+                    showThankYouScreen -> {
+                        ThankYouScreen(
+                            parkingCost = parkingCost,
+                            onBackToHome = { showThankYouScreen = false }
+                        )
+                    }
+                    // ✅ Onboarding
                     showOnboarding -> {
                         OnboardingScreen { showOnboarding = false }
                     }
-                    // Home
+                    // ✅ Home
                     else -> {
                         HomeScreen(
                             onCardClick = { featureType ->
                                 when (featureType) {
                                     "Pintu Masuk" -> showPintuMasukScreen = true
                                     "Kantin" -> showCanteenMenuScreen = true
+                                    "Parkir" -> showParkingScreen = true
+                                    "Destinasi" -> showDestinationMenuScreen = true
                                 }
                             }
                         )
@@ -174,8 +275,9 @@ class MainActivity : ComponentActivity() {
                 Toast.makeText(this, "Kartu terdeteksi, memproses...", Toast.LENGTH_SHORT).show()
                 isNfcTapped = true
             }
-            // NFC untuk Pembayaran Kantin
-            else if (NfcAdapter.ACTION_TAG_DISCOVERED == it.action && showPaymentScreen) {
+            // NFC untuk Pembayaran Kantin, Parkir, dan Tiket
+            else if (NfcAdapter.ACTION_TAG_DISCOVERED == it.action &&
+                (showPaymentScreen || showParkingScreen)) {
                 Toast.makeText(this, "Kartu terdeteksi, memproses pembayaran...", Toast.LENGTH_SHORT).show()
                 nfcTappedForPayment = true
             }

@@ -1,9 +1,9 @@
-// Pastikan package ini benar
-package com.example.proyektmii.ui.screens
+package com.example.proyektmii.ui.screens // Pastikan ini 'screens' dengan huruf kecil
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable // Impor ini untuk interaksi klik
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -19,11 +19,11 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.TextStyle // Import TextStyle
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.tooling.preview.Preview
 import com.example.proyektmii.R
 import com.example.proyektmii.ui.theme.ColorBackground
 import com.example.proyektmii.ui.theme.ColorPrimary
@@ -31,16 +31,17 @@ import com.example.proyektmii.ui.theme.ProyekTMIITheme
 
 data class FeatureItem(
     val iconRes: Int,
-    val text: String
+    val text: String,
+    val type: String // Tambahkan field 'type' untuk identifikasi fitur
 )
 
 @Composable
-fun HomeScreen() {
+fun HomeScreen(onCardClick: (String) -> Unit) { // Tambahkan parameter onCardClick
     val featureItems = listOf(
-        FeatureItem(R.drawable.pintumasuk, "Pintu Masuk"),
-        FeatureItem(R.drawable.parkir, "Parkir"),
-        FeatureItem(R.drawable.destinasi, "Destinasi"),
-        FeatureItem(R.drawable.kantin, "Kantin")
+        FeatureItem(R.drawable.pintumasuk, "Pintu Masuk", "Pintu Masuk"),
+        FeatureItem(R.drawable.parkir, "Parkir", "Parkir"),
+        FeatureItem(R.drawable.destinasi, "Destinasi", "Destinasi"),
+        FeatureItem(R.drawable.kantin, "Kantin", "Kantin")
     )
 
     val gradientTextStyle = TextStyle(
@@ -77,7 +78,8 @@ fun HomeScreen() {
                 items(featureItems) { item ->
                     FeatureGridCard(
                         iconRes = item.iconRes,
-                        text = item.text
+                        text = item.text,
+                        onClick = { onCardClick(item.type) } // Panggil callback saat diklik
                     )
                 }
             }
@@ -121,12 +123,13 @@ fun HomeScreen() {
 }
 
 @Composable
-fun FeatureGridCard(iconRes: Int, text: String) {
+fun FeatureGridCard(iconRes: Int, text: String, onClick: () -> Unit) { // Tambahkan parameter onClick
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .height(150.dp)
-            .border(2.dp, Color.Red, RoundedCornerShape(16.dp)),
+            .border(2.dp, Color.Red, RoundedCornerShape(16.dp))
+            .clickable(onClick = onClick), // Tambahkan modifier clickable
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White)
@@ -158,6 +161,6 @@ fun FeatureGridCard(iconRes: Int, text: String) {
 @Composable
 fun HomeScreenPreview() {
     ProyekTMIITheme {
-        HomeScreen()
+        HomeScreen(onCardClick = {})
     }
 }

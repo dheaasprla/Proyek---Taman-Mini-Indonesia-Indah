@@ -1,4 +1,3 @@
-// Pastikan package ini benar
 package com.example.proyektmii.ui.screens
 
 import androidx.compose.foundation.Image
@@ -39,13 +38,14 @@ data class FeatureItem(
 @Composable
 fun HomeScreen(
     onNavigateToParking: () -> Unit,
-    onNavigateToCanteen: () -> Unit // Tambahkan parameter ini
+    onNavigateToCanteen: () -> Unit,
+    onNavigateToDestination: () -> Unit
 ) {
     val featureItems = listOf(
         FeatureItem(R.drawable.pintumasuk, "Pintu Masuk"),
-        FeatureItem(R.drawable.parkir, "Parkir") { onNavigateToParking() },
-        FeatureItem(R.drawable.destinasi, "Destinasi"),
-        FeatureItem(R.drawable.kantin, "Kantin") { onNavigateToCanteen() } // Hubungkan ke Canteen
+        FeatureItem(R.drawable.parkir, "Parkir", onClick = onNavigateToParking),
+        FeatureItem(R.drawable.destinasi, "Destinasi", onClick = onNavigateToDestination),
+        FeatureItem(R.drawable.kantin, "Kantin", onClick = onNavigateToCanteen)
     )
 
     val gradientTextStyle = TextStyle(
@@ -83,7 +83,7 @@ fun HomeScreen(
                     FeatureGridCard(
                         iconRes = item.iconRes,
                         text = item.text,
-                        onClick = item.onClick // Hubungkan onClick dari data item
+                        onClick = item.onClick // Gunakan onClick dari item
                     )
                 }
             }
@@ -172,7 +172,8 @@ fun HomeScreenPreview() {
     ProyekTMIITheme {
         HomeScreen(
             onNavigateToParking = {},
-            onNavigateToCanteen = {} // Tambahkan parameter default untuk preview
+            onNavigateToCanteen = {},
+            onNavigateToDestination = {}
         )
     }
 }

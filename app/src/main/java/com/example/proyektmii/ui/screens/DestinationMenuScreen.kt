@@ -10,10 +10,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 @Composable
-fun PaymentSuccessScreen(
-    totalPrice: Int,
-    onBackToHome: () -> Unit,
-    successMessage: String = "Pembayaran Berhasil", // Parameter opsional untuk pesan kustom
+fun DestinationMenuScreen(
+    onNavigateToWahana: () -> Unit,
+    onNavigateToMuseum: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -21,12 +20,14 @@ fun PaymentSuccessScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Text(successMessage, fontSize = 24.sp)
-        Spacer(modifier = Modifier.height(16.dp))
-        Text("Total yang dibayarkan: Rp $totalPrice", fontSize = 18.sp)
+        Text("Pilih Destinasi", fontSize = 24.sp)
         Spacer(modifier = Modifier.height(32.dp))
-        Button(onClick = onBackToHome) {
-            Text("Kembali ke Beranda")
+        Button(onClick = onNavigateToWahana, modifier = Modifier.fillMaxWidth()) {
+            Text("Wahana & Rekreasi")
+        }
+        Spacer(modifier = Modifier.height(16.dp))
+        Button(onClick = onNavigateToMuseum, modifier = Modifier.fillMaxWidth()) {
+            Text("Museum")
         }
     }
 }

@@ -10,8 +10,11 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import com.example.proyektmii.data.CartItem
+import com.example.proyektmii.data.TicketItem
 import com.example.proyektmii.ui.screens.*
 import com.example.proyektmii.ui.theme.ProyekTMIITheme
+import com.example.proyektmii.data.Destination
 
 class MainActivity : ComponentActivity() {
     private var nfcAdapter: NfcAdapter? = null
@@ -79,7 +82,7 @@ class MainActivity : ComponentActivity() {
                 }
 
                 when {
-                    // ✅ Parking Checkout Success
+                    // Parking Checkout Success
                     showParkingCheckoutSuccessScreen -> {
                         ParkingCheckoutSuccessScreen(
                             totalPrice = parkingCost,
@@ -93,7 +96,7 @@ class MainActivity : ComponentActivity() {
                         )
                     }
 
-                    // ✅ Parking Checkout Screen
+                    // Parking Checkout Screen
                     showParkingCheckoutScreen -> {
                         parkingEntryTime?.let { entryTime ->
                             val durationHours = ((System.currentTimeMillis() - entryTime) / 3600000).toInt() + 1
@@ -117,7 +120,7 @@ class MainActivity : ComponentActivity() {
                         }
                     }
 
-                    // ✅ Parking Check-in Success
+                    // Parking Check-in Success
                     showParkingCheckinSuccessScreen -> {
                         ParkingCheckinSuccessScreen(
                             onBackToHome = {
@@ -127,7 +130,7 @@ class MainActivity : ComponentActivity() {
                         )
                     }
 
-                    // ✅ Parking Check-in Screen
+                    // Parking Check-in Screen
                     showParkingCheckinScreen -> {
                         if (isCheckedIn) {
                             // Jika sudah check-in, arahkan ke checkout
@@ -141,21 +144,21 @@ class MainActivity : ComponentActivity() {
                         }
                     }
 
-                    // ✅ Pintu Masuk Sukses
+                    // Pintu Masuk Sukses
                     showPintuMasukSuksesScreen -> {
                         PintuMasukSuksesScreen(
                             onBackToHome = { showPintuMasukSuksesScreen = false }
                         )
                     }
 
-                    // ✅ Pintu Masuk
+                    // Pintu Masuk
                     showPintuMasukScreen -> {
                         PintuMasukScreen(
                             onBack = { showPintuMasukScreen = false }
                         )
                     }
 
-                    // ✅ Pembayaran sukses (Kantin atau Tiket)
+                    // Pembayaran sukses (Kantin atau Tiket)
                     showPaymentSuccessScreen -> {
                         PaymentSuccessScreen(
                             totalPrice = totalPrice,
@@ -173,7 +176,7 @@ class MainActivity : ComponentActivity() {
                         )
                     }
 
-                    // ✅ Layar Pembayaran (NFC untuk Kantin dan Tiket)
+                    // Layar Pembayaran (NFC untuk Kantin dan Tiket)
                     showPaymentScreen -> {
                         PaymentScreen(
                             totalPrice = totalPrice,
@@ -195,7 +198,7 @@ class MainActivity : ComponentActivity() {
                         )
                     }
 
-                    // ✅ Pembayaran Tiket
+                    // Pembayaran Tiket
                     showTicketCartScreen -> {
                         TicketCartScreen(
                             ticketItem = selectedTicket,
@@ -214,7 +217,7 @@ class MainActivity : ComponentActivity() {
                         )
                     }
 
-                    // ✅ Keranjang Kantin
+                    // Keranjang Kantin
                     showCartScreen -> {
                         CartScreen(
                             cartItems = cartItems,
@@ -243,7 +246,7 @@ class MainActivity : ComponentActivity() {
                         )
                     }
 
-                    // ✅ Menu Kantin
+                    // Menu Kantin
                     showCanteenMenuScreen -> {
                         CanteenMenuScreen(
                             onProceedToCart = { items ->
@@ -255,7 +258,7 @@ class MainActivity : ComponentActivity() {
                         )
                     }
 
-                    // ✅ Pilih Destinasi
+                    // Pilih Destinasi
                     showDestinationSelectionScreen -> {
                         DestinationSelectionScreen(
                             isWahana = isWahanaSelected,
@@ -271,7 +274,7 @@ class MainActivity : ComponentActivity() {
                         )
                     }
 
-                    // ✅ Menu Destinasi
+                    // Menu Destinasi
                     showDestinationMenuScreen -> {
                         DestinationMenuScreen(
                             onNavigateToWahana = {
@@ -290,12 +293,12 @@ class MainActivity : ComponentActivity() {
                         )
                     }
 
-                    // ✅ Onboarding
+                    // Onboarding
                     showOnboarding -> {
                         OnboardingScreen { showOnboarding = false }
                     }
 
-                    // ✅ Home
+                    // Home
                     else -> {
                         HomeScreen(
                             onCardClick = { featureType ->

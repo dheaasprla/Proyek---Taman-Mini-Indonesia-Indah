@@ -33,13 +33,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.proyektmii.R
+import com.example.proyektmii.data.CartItem
+import com.example.proyektmii.data.MenuItem
 import com.example.proyektmii.ui.theme.ColorBackground
 import com.example.proyektmii.ui.theme.ColorPrimary
-
-data class CartItem(
-    val menuItem: MenuItem,
-    var quantity: Int = 1
-)
 
 @Composable
 fun CanteenMenuScreen(

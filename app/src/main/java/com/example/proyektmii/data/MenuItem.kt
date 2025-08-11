@@ -1,4 +1,4 @@
-package com.example.proyektmii.ui.screens
+package com.example.proyektmii.data
 
 data class MenuItem(
     val name: String,

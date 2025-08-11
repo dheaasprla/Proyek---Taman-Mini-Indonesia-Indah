@@ -28,6 +28,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.proyektmii.R
+import com.example.proyektmii.data.CartItem
+import com.example.proyektmii.data.MenuItem
 import com.example.proyektmii.ui.theme.ColorBackground
 import com.example.proyektmii.ui.theme.ColorPrimary
 
@@ -107,7 +109,7 @@ fun CartScreen(
 
                 // Title
                 Text(
-                    text = "Pembayaran Tiket",
+                    text = "Pembayaran Menu",
                     fontSize = 22.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color.Black,

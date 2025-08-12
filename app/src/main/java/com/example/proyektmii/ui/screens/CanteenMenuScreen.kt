@@ -137,37 +137,56 @@ fun CanteenMenuScreen(
                                 cartItems.filter { it.menuItem.name != item.name }
                             }
                             onUpdateCart(updatedCartItems)
-                        },
-                        isSelected = existingCartItem != null
+                        }
                     )
                 }
             }
 
-            Button(
-                onClick = { onProceedToCart(cartItems) },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 20.dp)
-                    .height(48.dp),
-                enabled = cartItems.isNotEmpty(),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF1976D2),
-                    disabledContainerColor = Color.Gray
-                ),
-                shape = RoundedCornerShape(8.dp)
-            ) {
-                Text(
-                    text = "Lanjut ke Keranjang",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = Color.White
-                )
+            // Ringkasan Keranjang di Bawah
+            if (cartItems.isNotEmpty()) {
+                val totalItems = cartItems.sumOf { it.quantity }
+                val totalPrice = cartItems.sumOf { it.menuItem.price * it.quantity }
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp)
+                        .background(Color(0xFFE3F2FD), shape = RoundedCornerShape(12.dp))
+                        .padding(16.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column {
+                            Text(
+                                text = "Total Pesanan",
+                                fontSize = 14.sp,
+                                color = Color.Gray
+                            )
+                            Text(
+                                text = "(${totalItems} item) Rp ${String.format("%,d", totalPrice)}",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.Black
+                            )
+                        }
+                        Button(
+                            onClick = { onProceedToCart(cartItems) },
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1976D2)),
+                            shape = RoundedCornerShape(8.dp)
+                        ) {
+                            Text(text = "Bayar")
+                        }
+                    }
+                }
+            } else {
+                Spacer(modifier = Modifier.height(20.dp))
             }
         }
     }
 }
 
-// Tambahkan kembali kode MenuItemCard di sini
 @Composable
 fun MenuItemCard(
     item: MenuItem,
@@ -175,20 +194,14 @@ fun MenuItemCard(
     quantity: Int,
     onQuantityIncrease: () -> Unit,
     onQuantityDecrease: () -> Unit,
-    isSelected: Boolean,
     modifier: Modifier = Modifier
 ) {
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .height(180.dp)
-            .clickable {
-                if (!isSelected) {
-                    onQuantityIncrease()
-                }
-            },
+            .height(250.dp),
         colors = CardDefaults.cardColors(
-            containerColor = if (isSelected) Color(0xFFF5F5F5) else ColorBackground
+            containerColor = ColorBackground
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
         shape = RoundedCornerShape(12.dp)
@@ -213,55 +226,100 @@ fun MenuItemCard(
 
             Text(
                 text = item.name,
-                fontSize = 14.sp,
+                fontSize = 13.sp,
                 fontWeight = FontWeight.Medium,
-                color = if (isSelected) Color(0xFF1976D2) else Color.Black,
+                color = Color.Black,
                 textAlign = TextAlign.Center
             )
 
             Text(
-                text = "Harga: Rp ${String.format("%,d", item.price)}",
+                text = "Rp ${String.format("%,d", item.price)}",
                 fontSize = 12.sp,
                 color = Color.Gray,
                 textAlign = TextAlign.Center
             )
 
-            if (isSelected) {
-                Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Kondisi untuk menampilkan tombol
+            if (quantity > 0) {
+                // Jika sudah dipilih, tampilkan tombol + - dengan jumlah
                 Row(
-                    verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
+                        .fillMaxWidth()
+                        .height(36.dp)
                         .background(
                             Color(0xFF1976D2),
-                            shape = RoundedCornerShape(20.dp)
+                            shape = RoundedCornerShape(18.dp)
                         )
-                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                        .padding(horizontal = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        text = "−",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White,
+                    // Tombol minus
+                    Box(
                         modifier = Modifier
-                            .clickable { onQuantityDecrease() }
-                            .padding(4.dp)
-                    )
+                            .size(12.dp)
+                            .background(
+                                Color.White.copy(alpha = 0.2f),
+                                shape = RoundedCornerShape(14.dp)
+                            )
+                            .clickable { onQuantityDecrease() },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "−",
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                    }
 
+                    // Tampilkan jumlah
                     Text(
                         text = quantity.toString(),
-                        fontSize = 14.sp,
-                        color = Color.White,
-                        modifier = Modifier.padding(horizontal = 8.dp)
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
                     )
 
-                    Text(
-                        text = "+",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White,
+                    // Tombol plus
+                    Box(
                         modifier = Modifier
-                            .clickable { onQuantityIncrease() }
-                            .padding(4.dp)
+                            .size(25.dp)
+                            .background(
+                                Color.White.copy(alpha = 0.2f),
+                                shape = RoundedCornerShape(14.dp)
+                            )
+                            .clickable { onQuantityIncrease() },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "+",
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                    }
+                }
+            } else {
+                // Jika belum dipilih, tampilkan tombol "Tambah"
+                Button(
+                    onClick = onQuantityIncrease,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF1976D2)
+                    ),
+                    shape = RoundedCornerShape(18.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(36.dp),
+                    contentPadding = PaddingValues(horizontal = 14.dp, vertical = 4.dp)
+                ) {
+                    Text(
+                        text = "Tambah",
+                        fontSize = 12.sp,
+                        color = Color.White,
+                        fontWeight = FontWeight.Medium
                     )
                 }
             }

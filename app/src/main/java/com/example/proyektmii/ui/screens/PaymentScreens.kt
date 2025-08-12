@@ -24,7 +24,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.draw.clip
@@ -43,19 +42,21 @@ fun PaymentScreen(
     nfcTapped: Boolean,
     onNfcProcessed: () -> Unit,
     onPaymentSuccess: (Int) -> Unit,
-    onBack: () -> Unit = {}, // Membuat parameter optional dengan default empty lambda
+    onBack: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     var isProcessing by remember { mutableStateOf(false) }
 
-    // Mulai pemrosesan saat NFC di-tap
     LaunchedEffect(nfcTapped) {
         if (nfcTapped && !isProcessing) {
             isProcessing = true
-            delay(2000) // Simulasi pemrosesan 2 detik
-            onPaymentSuccess(totalPrice)
-            onNfcProcessed()
-            isProcessing = false
+            try {
+                delay(500)
+                onPaymentSuccess(totalPrice)
+            } finally {
+                onNfcProcessed()
+                isProcessing = false
+            }
         }
     }
 
@@ -65,25 +66,19 @@ fun PaymentScreen(
                 .fillMaxSize()
                 .background(
                     brush = Brush.verticalGradient(
-                        colors = listOf(
-                            ColorPositive, // Kuning di atas
-                            ColorBackground // Putih di bawah
-                        )
+                        colors = listOf(ColorPositive, ColorBackground)
                     )
                 )
         ) {
-            // Background Pattern Awan - hanya di atas
             Image(
                 painter = painterResource(id = R.drawable.awan),
                 contentDescription = "Background Pattern",
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(300.dp) // Membatasi tinggi agar hanya di bagian atas
+                    .height(300.dp)
                     .align(Alignment.TopCenter),
                 contentScale = ContentScale.FillWidth
             )
-
-            // Background Ombak di bawah - lurus tidak miring
             Image(
                 painter = painterResource(id = R.drawable.ombak),
                 contentDescription = "Background Ombak",
@@ -91,24 +86,19 @@ fun PaymentScreen(
                     .fillMaxWidth()
                     .height(250.dp)
                     .align(Alignment.BottomCenter),
-                contentScale = ContentScale.FillWidth // Menggunakan FillWidth agar tidak miring
+                contentScale = ContentScale.FillWidth
             )
-
-            // Konten utama
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = 20.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+                    .padding(horizontal = 20.dp)
             ) {
-                // Header dengan spacing yang lebih baik
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(top = 50.dp, bottom = 20.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Back button dengan background putih bulat
                     Box(
                         modifier = Modifier
                             .size(40.dp)
@@ -123,54 +113,41 @@ fun PaymentScreen(
                             tint = Color.Black
                         )
                     }
-
-                    // Title di tengah
                     Text(
                         text = "Pembayaran",
                         fontSize = 22.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.Black,
-                        modifier = Modifier
-                            .weight(1f),
+                        modifier = Modifier.weight(1f),
                         textAlign = TextAlign.Center
                     )
-
-                    // Logo TMII
                     Image(
                         painter = painterResource(id = R.drawable.tmii_logo),
                         contentDescription = "TMII Logo",
                         modifier = Modifier.size(40.dp)
                     )
                 }
-
-                // Spacer untuk memberikan ruang
                 Spacer(modifier = Modifier.height(40.dp))
-
-                // Total harga
                 Text(
-                    text = "Total: Rp $totalPrice",
+                    text = "Total: Rp ${String.format("%,d", totalPrice)}",
                     fontSize = 20.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = Color.Black,
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
                 )
-
                 Spacer(modifier = Modifier.height(20.dp))
-
-                // Konten tengah - Card Icon atau Processing
                 Column(
-                    horizontalAlignment = Alignment.CenterHorizontally
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.fillMaxWidth()
                 ) {
                     if (isProcessing) {
-                        // Show processing state
                         CircularProgressIndicator(
                             modifier = Modifier.size(100.dp),
                             color = ColorPrimary,
                             strokeWidth = 6.dp
                         )
-
                         Spacer(modifier = Modifier.height(20.dp))
-
                         Text(
                             text = "Memproses\nPembayaran...",
                             fontSize = 24.sp,
@@ -180,16 +157,12 @@ fun PaymentScreen(
                             lineHeight = 28.sp
                         )
                     } else {
-                        // Card image dengan ukuran yang lebih proporsional
                         Image(
                             painter = painterResource(id = R.drawable.kartu),
                             contentDescription = "Kartu",
                             modifier = Modifier.size(150.dp)
                         )
-
                         Spacer(modifier = Modifier.height(15.dp))
-
-                        // Text instruction
                         Text(
                             text = "Silahkan\nTap Kartu",
                             fontSize = 28.sp,
@@ -198,22 +171,12 @@ fun PaymentScreen(
                             textAlign = TextAlign.Center,
                             lineHeight = 32.sp
                         )
-
                         Spacer(modifier = Modifier.height(5.dp))
-
-                        // NFC Tap area dengan styling yang lebih baik
                         Box(
                             modifier = Modifier
                                 .size(200.dp)
-                                .border(
-                                    3.dp,
-                                    ColorWarning, // Menggunakan ColorWarning dari theme
-                                    shape = RoundedCornerShape(12.dp)
-                                )
-                                .background(
-                                    ColorBackground, // Menggunakan ColorBackground dari theme
-                                    shape = RoundedCornerShape(12.dp)
-                                )
+                                .border(3.dp, ColorWarning, shape = RoundedCornerShape(12.dp))
+                                .background(ColorBackground, shape = RoundedCornerShape(12.dp))
                                 .clip(RoundedCornerShape(12.dp)),
                             contentAlignment = Alignment.Center
                         ) {
@@ -226,24 +189,8 @@ fun PaymentScreen(
                         }
                     }
                 }
-
-                // Spacer untuk mendorong ombak ke bawah
                 Spacer(modifier = Modifier.weight(1f))
             }
         }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun PaymentScreenPreview() {
-    ProyekTMIITheme {
-        PaymentScreen(
-            totalPrice = 50000,
-            nfcTapped = false,
-            onNfcProcessed = {},
-            onPaymentSuccess = {},
-            onBack = {}
-        )
     }
 }

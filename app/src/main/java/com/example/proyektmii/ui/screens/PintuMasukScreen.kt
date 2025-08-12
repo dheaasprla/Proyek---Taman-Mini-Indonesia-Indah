@@ -10,7 +10,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -42,24 +41,21 @@ fun PintuMasukScreen(
                 .background(
                     brush = Brush.verticalGradient(
                         colors = listOf(
-                            ColorPositive, // Kuning di atas
-                            ColorBackground // Putih di bawah
+                            ColorPositive,
+                            ColorBackground
                         )
                     )
                 )
         ) {
-            // Background Pattern Awan - hanya di atas
             Image(
                 painter = painterResource(id = R.drawable.awan),
                 contentDescription = "Background Pattern",
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(300.dp) // Membatasi tinggi agar hanya di bagian atas
+                    .height(300.dp)
                     .align(Alignment.TopCenter),
                 contentScale = ContentScale.FillWidth
             )
-
-            // Background Ombak di bawah - lurus tidak miring
             Image(
                 painter = painterResource(id = R.drawable.ombak),
                 contentDescription = "Background Ombak",
@@ -67,24 +63,21 @@ fun PintuMasukScreen(
                     .fillMaxWidth()
                     .height(250.dp)
                     .align(Alignment.BottomCenter),
-                contentScale = ContentScale.FillWidth // Menggunakan FillWidth agar tidak miring
+                contentScale = ContentScale.FillWidth
             )
 
-            // Konten utama
             Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(horizontal = 20.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Header dengan spacing yang lebih baik
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(top = 50.dp, bottom = 20.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Back button dengan background putih bulat
                     Box(
                         modifier = Modifier
                             .size(40.dp)
@@ -100,18 +93,15 @@ fun PintuMasukScreen(
                         )
                     }
 
-                    // Title di tengah
                     Text(
                         text = "Pintu Masuk",
                         fontSize = 22.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.Black,
-                        modifier = Modifier
-                            .weight(1f),
+                        modifier = Modifier.weight(1f),
                         textAlign = TextAlign.Center
                     )
 
-                    // Logo TMII
                     Image(
                         painter = painterResource(id = R.drawable.tmii_logo),
                         contentDescription = "TMII Logo",
@@ -119,14 +109,11 @@ fun PintuMasukScreen(
                     )
                 }
 
-                // Spacer untuk memberikan ruang
                 Spacer(modifier = Modifier.height(60.dp))
 
-                // Konten tengah - Card Icon
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    // Card image dengan ukuran yang lebih proporsional
                     Image(
                         painter = painterResource(id = R.drawable.kartu),
                         contentDescription = "Kartu",
@@ -135,7 +122,6 @@ fun PintuMasukScreen(
 
                     Spacer(modifier = Modifier.height(15.dp))
 
-                    // Text instruction
                     Text(
                         text = "Silahkan\nTap Kartu",
                         fontSize = 28.sp,
@@ -147,17 +133,16 @@ fun PintuMasukScreen(
 
                     Spacer(modifier = Modifier.height(5.dp))
 
-                    // NFC Tap area dengan styling yang lebih baik
                     Box(
                         modifier = Modifier
                             .size(200.dp)
                             .border(
                                 3.dp,
-                                ColorWarning, // Menggunakan ColorWarning dari theme
+                                ColorWarning,
                                 shape = RoundedCornerShape(12.dp)
                             )
                             .background(
-                                ColorBackground, // Menggunakan ColorBackground dari theme
+                                ColorBackground,
                                 shape = RoundedCornerShape(12.dp)
                             )
                             .clip(RoundedCornerShape(12.dp)),
@@ -171,18 +156,8 @@ fun PintuMasukScreen(
                         )
                     }
                 }
-
-                // Spacer untuk mendorong ombak ke bawah
                 Spacer(modifier = Modifier.weight(1f))
             }
         }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun PintuMasukScreenPreview() {
-    ProyekTMIITheme {
-        PintuMasukScreen(onBack = {})
     }
 }

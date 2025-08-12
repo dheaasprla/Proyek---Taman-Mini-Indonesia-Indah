@@ -1,4 +1,3 @@
-// destinationselectionscreen.kt
 package com.example.proyektmii.ui.screens
 
 import androidx.compose.foundation.Image
@@ -42,8 +41,10 @@ import com.example.proyektmii.ui.theme.ColorPrimary
 @Composable
 fun DestinationSelectionScreen(
     isWahana: Boolean,
+    selectedTicket: TicketItem?,
     onProceedToCart: (TicketItem) -> Unit,
     onBack: (() -> Unit)? = null,
+    onUpdateTicket: (TicketItem?) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val destinations = if (isWahana) {
@@ -66,23 +67,17 @@ fun DestinationSelectionScreen(
         )
     }
 
-    var selectedTicket by remember { mutableStateOf<TicketItem?>(null) }
-
     Box(
         modifier = modifier
             .fillMaxSize()
             .background(
                 brush = Brush.verticalGradient(
-                    colors = listOf(
-                        ColorBackground,
-                        ColorPrimary
-                    ),
+                    colors = listOf(ColorBackground, ColorPrimary),
                     startY = 0f,
                     endY = Float.POSITIVE_INFINITY
                 )
             )
     ) {
-        // Background Ombak di bawah
         Image(
             painter = painterResource(id = R.drawable.ombak),
             contentDescription = "Background Ombak",
@@ -98,14 +93,12 @@ fun DestinationSelectionScreen(
                 .fillMaxSize()
                 .padding(horizontal = 20.dp)
         ) {
-            // Header
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 50.dp, bottom = 20.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Back button
                 Box(
                     modifier = Modifier
                         .size(40.dp)
@@ -121,7 +114,6 @@ fun DestinationSelectionScreen(
                     )
                 }
 
-                // Title
                 Text(
                     text = if (isWahana) "Wahana & Rekreasi" else "Museum",
                     fontSize = 22.sp,
@@ -131,11 +123,9 @@ fun DestinationSelectionScreen(
                     textAlign = TextAlign.Center
                 )
 
-                // Spacer for balance
                 Spacer(modifier = Modifier.size(40.dp))
             }
 
-            // Destinations Grid
             LazyVerticalGrid(
                 columns = GridCells.Fixed(2),
                 modifier = Modifier.weight(1f),
@@ -143,36 +133,35 @@ fun DestinationSelectionScreen(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 items(destinations) { destination ->
-                    val isSelected = selectedTicket?.destination == destination
-                    val currentQuantity = if (isSelected) selectedTicket?.quantity ?: 1 else 0
+                    val isSelected = selectedTicket?.destination?.name == destination.name
+                    val currentQuantity = if (isSelected) selectedTicket?.quantity ?: 0 else 0
 
                     DestinationItemCard(
                         destination = destination,
                         quantity = currentQuantity,
                         onQuantityIncrease = {
-                            selectedTicket = if (isSelected) {
+                            val newTicket = if (isSelected) {
                                 selectedTicket?.copy(quantity = currentQuantity + 1)
                             } else {
                                 TicketItem(destination, 1)
                             }
+                            onUpdateTicket(newTicket)
                         },
                         onQuantityDecrease = {
-                            if (isSelected && currentQuantity > 1) {
-                                selectedTicket = selectedTicket?.copy(quantity = currentQuantity - 1)
-                            } else if (isSelected && currentQuantity == 1) {
-                                selectedTicket = null
+                            val newTicket = if (isSelected && currentQuantity > 1) {
+                                selectedTicket?.copy(quantity = currentQuantity - 1)
+                            } else {
+                                null
                             }
+                            onUpdateTicket(newTicket)
                         },
                         isSelected = isSelected
                     )
                 }
             }
 
-            // Proceed to cart button
             Button(
-                onClick = {
-                    selectedTicket?.let { onProceedToCart(it) }
-                },
+                onClick = { selectedTicket?.let { onProceedToCart(it) } },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 20.dp)
@@ -225,7 +214,6 @@ fun DestinationItemCard(
                 .padding(12.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Image
             Image(
                 painter = painterResource(id = destination.imageRes ?: R.drawable.museum),
                 contentDescription = destination.name,
@@ -238,7 +226,6 @@ fun DestinationItemCard(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Item name
             Text(
                 text = destination.name,
                 fontSize = 11.sp,
@@ -248,7 +235,6 @@ fun DestinationItemCard(
                 maxLines = 1
             )
 
-            // Price
             Text(
                 text = "Tiket: Rp ${String.format("%,d", destination.price)}",
                 fontSize = 10.sp,
@@ -258,7 +244,6 @@ fun DestinationItemCard(
 
             if (isSelected) {
                 Spacer(modifier = Modifier.height(4.dp))
-                // Quantity controls
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier

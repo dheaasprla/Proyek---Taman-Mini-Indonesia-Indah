@@ -4,324 +4,269 @@ import android.app.PendingIntent
 import android.content.Intent
 import android.content.IntentFilter
 import android.nfc.NfcAdapter
+import android.nfc.Tag
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.*
-import androidx.compose.ui.Modifier
 import com.example.proyektmii.data.CartItem
+import com.example.proyektmii.data.PaymentHistoryItem
 import com.example.proyektmii.data.TicketItem
+import com.example.proyektmii.data.local.AppPreferences
 import com.example.proyektmii.ui.screens.*
 import com.example.proyektmii.ui.theme.ProyekTMIITheme
-import com.example.proyektmii.data.Destination
 
 class MainActivity : ComponentActivity() {
     private var nfcAdapter: NfcAdapter? = null
+    private lateinit var appPreferences: AppPreferences
 
-    // State Pintu Masuk
+    private var currentScreen by mutableStateOf("onboarding")
     private var isNfcTapped by mutableStateOf(false)
-    private var showPintuMasukScreen by mutableStateOf(false)
-
-    // State Kantin
-    private var showCanteenMenuScreen by mutableStateOf(false)
-    private var showCartScreen by mutableStateOf(false)
-    private var showPaymentScreen by mutableStateOf(false)
-    private var showPaymentSuccessScreen by mutableStateOf(false)
-    private var cartItems by mutableStateOf(listOf<CartItem>())
     private var totalPrice by mutableStateOf(0)
-    private var nfcTappedForPayment by mutableStateOf(false)
 
-    // State Parkir - Updated dengan screen baru
-    private var showParkingCheckinScreen by mutableStateOf(false)
-    private var showParkingCheckinSuccessScreen by mutableStateOf(false)
-    private var showParkingCheckoutScreen by mutableStateOf(false)
-    private var showParkingCheckoutSuccessScreen by mutableStateOf(false)
-    private var parkingCost by mutableStateOf(0)
-    private var parkingEntryTime by mutableStateOf<Long?>(null)
-    private var isCheckedIn by mutableStateOf(false)
-
-    // State Destinasi/Tiket
-    private var showDestinationMenuScreen by mutableStateOf(false)
-    private var showDestinationSelectionScreen by mutableStateOf(false)
-    private var showTicketCartScreen by mutableStateOf(false)
+    private var cartItems by mutableStateOf(listOf<CartItem>())
     private var selectedTicket by mutableStateOf<TicketItem?>(null)
     private var isWahanaSelected by mutableStateOf(false)
+    private var parkingEntryTime by mutableStateOf<Long?>(null)
+    private var userName by mutableStateOf<String?>(null)
+    private var cardId by mutableStateOf<String?>(null)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        appPreferences = AppPreferences(this)
         nfcAdapter = NfcAdapter.getDefaultAdapter(this)
 
-        val intent = Intent(this, javaClass).apply {
-            addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
-        }
-        val pendingIntent = PendingIntent.getActivity(
-            this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE
-        )
+        loadSavedData()
 
         setContent {
             ProyekTMIITheme {
-                var showOnboarding by remember { mutableStateOf(true) }
-                var showPintuMasukSuksesScreen by remember { mutableStateOf(false) }
-
-                // Logika NFC untuk Pintu Masuk
-                if (isNfcTapped && showPintuMasukScreen) {
-                    showPintuMasukScreen = false
-                    showPintuMasukSuksesScreen = true
-                    isNfcTapped = false
-                }
-
-                // Logika NFC untuk Parking Check-in
-                if (isNfcTapped && showParkingCheckinScreen && !isCheckedIn) {
-                    val currentTime = System.currentTimeMillis()
-                    parkingEntryTime = currentTime
-                    isCheckedIn = true
-                    showParkingCheckinScreen = false
-                    showParkingCheckinSuccessScreen = true
-                    isNfcTapped = false
-                }
-
-                when {
-                    // Parking Checkout Success
-                    showParkingCheckoutSuccessScreen -> {
-                        ParkingCheckoutSuccessScreen(
-                            totalPrice = parkingCost,
-                            onBackToHome = {
-                                showParkingCheckoutSuccessScreen = false
-                                // Reset parking states
-                                parkingEntryTime = null
-                                isCheckedIn = false
-                                parkingCost = 0
+                when (currentScreen) {
+                    "onboarding" -> OnboardingScreen { currentScreen = "home" }
+                    "home" -> HomeScreen(onCardClick = { featureType ->
+                        when (featureType) {
+                            "Pintu Masuk" -> currentScreen = "pintuMasuk"
+                            "Kantin" -> {
+                                cartItems = appPreferences.getCartItems()
+                                currentScreen = "canteenMenu"
                             }
-                        )
-                    }
-
-                    // Parking Checkout Screen
-                    showParkingCheckoutScreen -> {
-                        parkingEntryTime?.let { entryTime ->
-                            val durationHours = ((System.currentTimeMillis() - entryTime) / 3600000).toInt() + 1
-                            val cost = durationHours * 5000
-                            parkingCost = cost
-
+                            "Parkir" -> {
+                                parkingEntryTime = appPreferences.getParkingEntryTime().takeIf { it > 0 }
+                                currentScreen = "parking"
+                            }
+                            "Destinasi" -> {
+                                selectedTicket = appPreferences.getTicketItem()
+                                currentScreen = "destinationMenu"
+                            }
+                        }
+                    })
+                    "pintuMasuk" -> PintuMasukScreen(onBack = { currentScreen = "home" })
+                    "pintuMasukSuccess" -> PintuMasukSuksesScreen(onBackToHome = { currentScreen = "home" })
+                    "parking" -> {
+                        val activeParkingEntryTime = appPreferences.getParkingEntryTime()
+                        if (activeParkingEntryTime > 0) {
                             ParkingCheckoutScreen(
-                                entryTime = entryTime,
-                                totalPrice = cost,
-                                nfcTapped = nfcTappedForPayment,
-                                onNfcProcessed = { nfcTappedForPayment = false },
-                                onPaymentSuccess = { price ->
-                                    showParkingCheckoutScreen = false
-                                    showParkingCheckoutSuccessScreen = true
+                                entryTime = activeParkingEntryTime,
+                                totalPrice = calculateParkingPrice(activeParkingEntryTime),
+                                nfcTapped = isNfcTapped,
+                                onNfcProcessed = {
+                                    Log.d("TMII_APP", "NFC processed for parking checkout")
+                                    isNfcTapped = false
                                 },
-                                onBack = {
-                                    showParkingCheckoutScreen = false
-                                    showParkingCheckinScreen = true
-                                }
+                                onPaymentSuccess = { paidAmount ->
+                                    Log.d("TMII_APP", "Parking payment successful: $paidAmount")
+                                    val newHistoryItem = PaymentHistoryItem(
+                                        cardId = cardId,
+                                        userName = userName,
+                                        transactionType = "Parkir",
+                                        items = listOf("Parkir"),
+                                        totalPrice = paidAmount,
+                                        timestamp = System.currentTimeMillis()
+                                    )
+                                    appPreferences.addPaymentToHistory(newHistoryItem)
+                                    appPreferences.clearParkingData()
+                                    parkingEntryTime = null
+                                    totalPrice = paidAmount
+                                    currentScreen = "parkingCheckoutSuccess"
+                                },
+                                onBack = { currentScreen = "home" }
                             )
-                        }
-                    }
-
-                    // Parking Check-in Success
-                    showParkingCheckinSuccessScreen -> {
-                        ParkingCheckinSuccessScreen(
-                            onBackToHome = {
-                                showParkingCheckinSuccessScreen = false
-                                showParkingCheckinScreen = true
-                            }
-                        )
-                    }
-
-                    // Parking Check-in Screen
-                    showParkingCheckinScreen -> {
-                        if (isCheckedIn) {
-                            // Jika sudah check-in, arahkan ke checkout
-                            showParkingCheckinScreen = false
-                            showParkingCheckoutScreen = true
                         } else {
-                            // Tampilkan check-in screen
-                            ParkingCheckinScreen(
-                                onBack = { showParkingCheckinScreen = false }
-                            )
+                            ParkingCheckinScreen(onBack = { currentScreen = "home" })
                         }
                     }
+                    "parkingCheckinSuccess" -> ParkingCheckinSuccessScreen(onBackToHome = { currentScreen = "home" })
+                    "parkingCheckoutSuccess" -> ParkingCheckoutSuccessScreen(totalPrice = totalPrice, onBackToHome = { currentScreen = "home" })
+                    "canteenMenu" -> CanteenMenuScreen(
+                        cartItems = cartItems,
+                        onProceedToCart = { currentCartItems ->
+                            cartItems = currentCartItems
+                            appPreferences.saveCartItems(currentCartItems)
+                            currentScreen = "cart"
+                        },
+                        onBack = { currentScreen = "home" },
+                        onUpdateCart = { updatedCart ->
+                            cartItems = updatedCart
+                            appPreferences.saveCartItems(updatedCart)
+                        }
+                    )
+                    "cart" -> CartScreen(
+                        cartItems = cartItems,
+                        onProceedToPayment = { price ->
+                            totalPrice = price
+                            currentScreen = "payment"
+                        },
+                        onBack = { currentScreen = "canteenMenu" },
+                        onUpdateQuantity = { menuItem, newQuantity ->
+                            cartItems = if (newQuantity > 0) {
+                                cartItems.map { if (it.menuItem == menuItem) it.copy(quantity = newQuantity) else it }
+                            } else {
+                                cartItems.filter { it.menuItem != menuItem }
+                            }
+                            appPreferences.saveCartItems(cartItems)
+                        }
+                    )
+                    "destinationMenu" -> DestinationMenuScreen(
+                        onNavigateToWahana = {
+                            isWahanaSelected = true
+                            currentScreen = "destinationSelection"
+                        },
+                        onNavigateToMuseum = {
+                            isWahanaSelected = false
+                            currentScreen = "destinationSelection"
+                        },
+                        onBack = { currentScreen = "home" }
+                    )
+                    "destinationSelection" -> DestinationSelectionScreen(
+                        isWahana = isWahanaSelected,
+                        selectedTicket = selectedTicket,
+                        onProceedToCart = {
+                            currentScreen = "ticketCart"
+                        },
+                        onBack = { currentScreen = "destinationMenu" },
+                        onUpdateTicket = { newTicket ->
+                            selectedTicket = newTicket
+                            appPreferences.saveTicketItem(newTicket)
+                        }
+                    )
+                    "ticketCart" -> TicketCartScreen(
+                        ticketItem = selectedTicket,
+                        onProceedToPayment = { price ->
+                            totalPrice = price
+                            currentScreen = "payment"
+                        },
+                        onBack = { currentScreen = "destinationSelection" },
+                        onUpdateQuantity = { newQuantity ->
+                            selectedTicket = selectedTicket?.copy(quantity = newQuantity)
+                            appPreferences.saveTicketItem(selectedTicket)
+                        }
+                    )
+                    "payment" -> PaymentScreen(
+                        totalPrice = totalPrice,
+                        nfcTapped = isNfcTapped,
+                        onNfcProcessed = {
+                            Log.d("TMII_APP", "NFC processed for general payment")
+                            isNfcTapped = false
+                        },
+                        onPaymentSuccess = { paidAmount ->
+                            Log.d("TMII_APP", "General payment successful: $paidAmount")
+                            val currentTime = System.currentTimeMillis()
+                            val transactionType = if (selectedTicket != null) "Tiket" else "Kantin"
+                            val itemsList = if (selectedTicket != null) {
+                                listOf("${selectedTicket!!.destination.name} x${selectedTicket!!.quantity}")
+                            } else {
+                                cartItems.map { "${it.menuItem.name} x${it.quantity}" }
+                            }
 
-                    // Pintu Masuk Sukses
-                    showPintuMasukSuksesScreen -> {
-                        PintuMasukSuksesScreen(
-                            onBackToHome = { showPintuMasukSuksesScreen = false }
-                        )
-                    }
+                            val newHistoryItem = PaymentHistoryItem(
+                                cardId = cardId,
+                                userName = userName,
+                                transactionType = transactionType,
+                                items = itemsList,
+                                totalPrice = paidAmount,
+                                timestamp = currentTime
+                            )
+                            appPreferences.addPaymentToHistory(newHistoryItem)
 
-                    // Pintu Masuk
-                    showPintuMasukScreen -> {
-                        PintuMasukScreen(
-                            onBack = { showPintuMasukScreen = false }
-                        )
-                    }
-
-                    // Pembayaran sukses (Kantin atau Tiket)
-                    showPaymentSuccessScreen -> {
-                        PaymentSuccessScreen(
-                            totalPrice = totalPrice,
-                            onBackToHome = {
-                                showPaymentSuccessScreen = false
-                                cartItems = emptyList()
+                            // Clear relevant data after payment
+                            if (selectedTicket != null) {
+                                appPreferences.saveTicketItem(null)
                                 selectedTicket = null
-                                totalPrice = 0
-                                showDestinationMenuScreen = false
-                            },
-                            successMessage = when {
-                                selectedTicket != null -> "Pembayaran Tiket Berhasil"
-                                else -> "Pembayaran Berhasil"
                             }
-                        )
-                    }
-
-                    // Layar Pembayaran (NFC untuk Kantin dan Tiket)
-                    showPaymentScreen -> {
-                        PaymentScreen(
-                            totalPrice = totalPrice,
-                            nfcTapped = nfcTappedForPayment,
-                            onNfcProcessed = { nfcTappedForPayment = false },
-                            onPaymentSuccess = { price ->
-                                totalPrice = price
-                                showPaymentScreen = false
-                                showPaymentSuccessScreen = true
-                            },
-                            onBack = {
-                                showPaymentScreen = false
-                                if (selectedTicket != null) {
-                                    showTicketCartScreen = true
-                                } else {
-                                    showCartScreen = true
-                                }
+                            if (cartItems.isNotEmpty()) {
+                                appPreferences.clearCartItems()
+                                cartItems = emptyList()
                             }
-                        )
-                    }
 
-                    // Pembayaran Tiket
-                    showTicketCartScreen -> {
-                        TicketCartScreen(
-                            ticketItem = selectedTicket,
-                            onProceedToPayment = { price ->
-                                totalPrice = price
-                                showTicketCartScreen = false
-                                showPaymentScreen = true
-                            },
-                            onBack = {
-                                showTicketCartScreen = false
-                                showDestinationSelectionScreen = true
-                            },
-                            onUpdateQuantity = { newQuantity ->
-                                selectedTicket = selectedTicket?.copy(quantity = newQuantity)
-                            }
-                        )
-                    }
-
-                    // Keranjang Kantin
-                    showCartScreen -> {
-                        CartScreen(
-                            cartItems = cartItems,
-                            onProceedToPayment = { price ->
-                                totalPrice = price
-                                showCartScreen = false
-                                showPaymentScreen = true
-                            },
-                            onBack = {
-                                showCartScreen = false
-                                showCanteenMenuScreen = true
-                            },
-                            onUpdateQuantity = { menuItem, newQuantity ->
-                                cartItems = if (newQuantity > 0) {
-                                    cartItems.map { cartItem ->
-                                        if (cartItem.menuItem == menuItem) {
-                                            cartItem.copy(quantity = newQuantity)
-                                        } else {
-                                            cartItem
-                                        }
-                                    }
-                                } else {
-                                    cartItems.filter { it.menuItem != menuItem }
-                                }
-                            }
-                        )
-                    }
-
-                    // Menu Kantin
-                    showCanteenMenuScreen -> {
-                        CanteenMenuScreen(
-                            onProceedToCart = { items ->
-                                cartItems = items
-                                showCanteenMenuScreen = false
-                                showCartScreen = true
-                            },
-                            onBack = { showCanteenMenuScreen = false }
-                        )
-                    }
-
-                    // Pilih Destinasi
-                    showDestinationSelectionScreen -> {
-                        DestinationSelectionScreen(
-                            isWahana = isWahanaSelected,
-                            onProceedToCart = { ticket ->
-                                selectedTicket = ticket
-                                showDestinationSelectionScreen = false
-                                showTicketCartScreen = true
-                            },
-                            onBack = {
-                                showDestinationSelectionScreen = false
-                                showDestinationMenuScreen = true
-                            }
-                        )
-                    }
-
-                    // Menu Destinasi
-                    showDestinationMenuScreen -> {
-                        DestinationMenuScreen(
-                            onNavigateToWahana = {
-                                isWahanaSelected = true
-                                showDestinationMenuScreen = false
-                                showDestinationSelectionScreen = true
-                            },
-                            onNavigateToMuseum = {
-                                isWahanaSelected = false
-                                showDestinationMenuScreen = false
-                                showDestinationSelectionScreen = true
-                            },
-                            onBack = {
-                                showDestinationMenuScreen = false
-                            }
-                        )
-                    }
-
-                    // Onboarding
-                    showOnboarding -> {
-                        OnboardingScreen { showOnboarding = false }
-                    }
-
-                    // Home
-                    else -> {
-                        HomeScreen(
-                            onCardClick = { featureType ->
-                                when (featureType) {
-                                    "Pintu Masuk" -> showPintuMasukScreen = true
-                                    "Kantin" -> showCanteenMenuScreen = true
-                                    "Parkir" -> showParkingCheckinScreen = true
-                                    "Destinasi" -> showDestinationMenuScreen = true
-                                }
-                            }
-                        )
-                    }
+                            totalPrice = paidAmount
+                            currentScreen = "paymentSuccess"
+                        },
+                        onBack = { currentScreen = if (selectedTicket != null) "ticketCart" else "cart" }
+                    )
+                    "paymentSuccess" -> PaymentSuccessScreen(
+                        totalPrice = totalPrice,
+                        onBackToHome = { currentScreen = "home" }
+                    )
                 }
             }
         }
     }
 
+    private fun loadSavedData() {
+        parkingEntryTime = appPreferences.getParkingEntryTime().takeIf { it > 0 }
+        cartItems = appPreferences.getCartItems()
+        selectedTicket = appPreferences.getTicketItem()
+        cardId = appPreferences.getUserCardId()
+        userName = appPreferences.getUserName()
+    }
+
+    private fun handleNfcTag() {
+        Log.d("TMII_APP", "NFC terdeteksi di layar: $currentScreen")
+
+        // Logika untuk menyimpan data user dan cardId saat ini
+        if (cardId != null && userName != null) {
+            appPreferences.saveUserData(cardId!!, userName!!)
+            Log.d("TMII_APP", "Saving current user data: Card ID = $cardId, Name = $userName")
+        }
+
+        when (currentScreen) {
+            "pintuMasuk" -> {
+                Log.d("TMII_APP", "Processing Pintu Masuk entry")
+                appPreferences.savePintuMasukEntry(System.currentTimeMillis())
+                currentScreen = "pintuMasukSuccess"
+            }
+            "parking" -> {
+                val currentParkingTime = appPreferences.getParkingEntryTime()
+                if (currentParkingTime == 0L) {
+                    Log.d("TMII_APP", "Processing parking check-in")
+                    val currentTime = System.currentTimeMillis()
+                    appPreferences.saveParkingEntryTime(currentTime)
+                    parkingEntryTime = currentTime
+                    currentScreen = "parkingCheckinSuccess"
+                } else {
+                    Log.d("TMII_APP", "Processing parking check-out")
+                    // Set flag untuk trigger LaunchedEffect di ParkingCheckoutScreen
+                    isNfcTapped = true
+                }
+            }
+            "payment" -> {
+                Log.d("TMII_APP", "Processing payment")
+                // Set flag untuk trigger LaunchedEffect di PaymentScreen
+                isNfcTapped = true
+            }
+        }
+    }
+
+    private fun calculateParkingPrice(entryTime: Long): Int {
+        val currentTime = System.currentTimeMillis()
+        val durationHours = ((currentTime - entryTime) / 3600000).toInt() + 1
+        return durationHours * 5000
+    }
+
     override fun onResume() {
         super.onResume()
-        val pendingIntent = PendingIntent.getActivity(
-            this, 0, Intent(this, javaClass).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP),
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE
-        )
+        val pendingIntent = PendingIntent.getActivity(this, 0, Intent(this, javaClass).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP), PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE)
         val intentFilters = arrayOf(IntentFilter(NfcAdapter.ACTION_TAG_DISCOVERED))
         nfcAdapter?.enableForegroundDispatch(this, pendingIntent, intentFilters, null)
     }
@@ -333,27 +278,23 @@ class MainActivity : ComponentActivity() {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        intent?.let {
-            // NFC untuk Pintu Masuk
-            if (NfcAdapter.ACTION_TAG_DISCOVERED == it.action && showPintuMasukScreen) {
-                Toast.makeText(this, "Kartu terdeteksi, memproses masuk...", Toast.LENGTH_SHORT).show()
-                isNfcTapped = true
-            }
-            // NFC untuk Parking Check-in
-            else if (NfcAdapter.ACTION_TAG_DISCOVERED == it.action && showParkingCheckinScreen && !isCheckedIn) {
-                Toast.makeText(this, "Kartu terdeteksi, check-in berhasil...", Toast.LENGTH_SHORT).show()
-                isNfcTapped = true
-            }
-            // NFC untuk Parking Check-out (pembayaran)
-            else if (NfcAdapter.ACTION_TAG_DISCOVERED == it.action && showParkingCheckoutScreen) {
-                Toast.makeText(this, "Kartu terdeteksi, memproses pembayaran parkir...", Toast.LENGTH_SHORT).show()
-                nfcTappedForPayment = true
-            }
-            // NFC untuk Pembayaran Kantin dan Tiket
-            else if (NfcAdapter.ACTION_TAG_DISCOVERED == it.action && showPaymentScreen) {
-                Toast.makeText(this, "Kartu terdeteksi, memproses pembayaran...", Toast.LENGTH_SHORT).show()
-                nfcTappedForPayment = true
-            }
+        if (NfcAdapter.ACTION_TAG_DISCOVERED == intent?.action) {
+            val tag = intent.getParcelableExtra<Tag>(NfcAdapter.EXTRA_TAG)
+            val tagIdBytes = tag?.id
+            val cardIdHex = tagIdBytes?.toHexString() ?: "ID_unknown"
+
+            // Perbarui state cardId dan userName
+            cardId = cardIdHex
+            userName = "Pengunjung-" + cardIdHex.substring(cardIdHex.length - 4, cardIdHex.length)
+
+            Log.d("TMII_APP", "Kartu terdeteksi. ID: $cardId, Screen: $currentScreen")
+            Toast.makeText(this, "Kartu terdeteksi. ID: $cardId", Toast.LENGTH_SHORT).show()
+
+            // Langsung panggil handleNfcTag
+            handleNfcTag()
         }
     }
+
+    // Fungsi helper untuk mengubah byte array menjadi string heksadesimal
+    private fun ByteArray.toHexString() = joinToString("") { "%02x".format(it) }
 }

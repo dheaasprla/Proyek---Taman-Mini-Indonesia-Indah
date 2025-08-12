@@ -17,10 +17,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -40,44 +36,30 @@ import com.example.proyektmii.ui.theme.ColorPrimary
 
 @Composable
 fun CanteenMenuScreen(
+    cartItems: List<CartItem>,
     onProceedToCart: (List<CartItem>) -> Unit,
     onBack: (() -> Unit)? = null,
+    onUpdateCart: (List<CartItem>) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val menuItems = listOf(
-        MenuItem("Nasi Goreng", 20000),
-        MenuItem("Mie Ayam", 15000),
-        MenuItem("Es Jeruk", 8000),
-        MenuItem("Teh manis", 5000)
+        MenuItem("Nasi Goreng", 20000, R.drawable.nasgor),
+        MenuItem("Mie Ayam", 15000, R.drawable.mieayam),
+        MenuItem("Es Jeruk", 8000, R.drawable.esjeruk),
+        MenuItem("Teh manis", 5000, R.drawable.esteh)
     )
-    var cartItems by remember { mutableStateOf(listOf<CartItem>()) }
-
-    // Function to get image resource based on menu item name
-    fun getImageResource(menuName: String): Int {
-        return when (menuName) {
-            "Nasi Goreng" -> R.drawable.nasgor
-            "Mie Ayam" -> R.drawable.mieayam
-            "Es Jeruk" -> R.drawable.esjeruk
-            "Teh manis" -> R.drawable.esteh
-            else -> R.drawable.nasgor // default fallback
-        }
-    }
 
     Box(
         modifier = modifier
             .fillMaxSize()
             .background(
                 brush = Brush.verticalGradient(
-                    colors = listOf(
-                        ColorBackground, // Putih di atas
-                        ColorPrimary    // Merah di bawah
-                    ),
+                    colors = listOf(ColorBackground, ColorPrimary),
                     startY = 0f,
                     endY = Float.POSITIVE_INFINITY
                 )
             )
     ) {
-        // Background Ombak di bawah
         Image(
             painter = painterResource(id = R.drawable.ombak),
             contentDescription = "Background Ombak",
@@ -93,14 +75,12 @@ fun CanteenMenuScreen(
                 .fillMaxSize()
                 .padding(horizontal = 20.dp)
         ) {
-            // Header
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 50.dp, bottom = 20.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Back button
                 Box(
                     modifier = Modifier
                         .size(40.dp)
@@ -116,7 +96,6 @@ fun CanteenMenuScreen(
                     )
                 }
 
-                // Title
                 Text(
                     text = "Kantin",
                     fontSize = 22.sp,
@@ -126,11 +105,9 @@ fun CanteenMenuScreen(
                     textAlign = TextAlign.Center
                 )
 
-                // Spacer for balance (same width as back button)
                 Spacer(modifier = Modifier.size(40.dp))
             }
 
-            // Menu Grid
             LazyVerticalGrid(
                 columns = GridCells.Fixed(2),
                 modifier = Modifier.weight(1f),
@@ -138,41 +115,34 @@ fun CanteenMenuScreen(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 items(menuItems) { item ->
-                    val existingCartItem = cartItems.find { it.menuItem == item }
+                    val existingCartItem = cartItems.find { it.menuItem.name == item.name }
                     val currentQuantity = existingCartItem?.quantity ?: 0
 
                     MenuItemCard(
                         item = item,
-                        imageRes = getImageResource(item.name),
+                        imageRes = item.imageRes ?: R.drawable.nasgor,
                         quantity = currentQuantity,
                         onQuantityIncrease = {
-                            cartItems = if (existingCartItem != null) {
-                                cartItems.map {
-                                    if (it.menuItem == item) it.copy(quantity = it.quantity + 1)
-                                    else it
-                                }
+                            val updatedCartItems = if (existingCartItem != null) {
+                                cartItems.map { if (it.menuItem.name == item.name) it.copy(quantity = it.quantity + 1) else it }
                             } else {
                                 cartItems + CartItem(item, 1)
                             }
+                            onUpdateCart(updatedCartItems)
                         },
                         onQuantityDecrease = {
-                            if (existingCartItem != null) {
-                                if (existingCartItem.quantity > 1) {
-                                    cartItems = cartItems.map {
-                                        if (it.menuItem == item) it.copy(quantity = it.quantity - 1)
-                                        else it
-                                    }
-                                } else {
-                                    cartItems = cartItems.filter { it.menuItem != item }
-                                }
+                            val updatedCartItems = if (existingCartItem != null && existingCartItem.quantity > 1) {
+                                cartItems.map { if (it.menuItem.name == item.name) it.copy(quantity = it.quantity - 1) else it }
+                            } else {
+                                cartItems.filter { it.menuItem.name != item.name }
                             }
+                            onUpdateCart(updatedCartItems)
                         },
                         isSelected = existingCartItem != null
                     )
                 }
             }
 
-            // Proceed to cart button
             Button(
                 onClick = { onProceedToCart(cartItems) },
                 modifier = Modifier
@@ -197,6 +167,7 @@ fun CanteenMenuScreen(
     }
 }
 
+// Tambahkan kembali kode MenuItemCard di sini
 @Composable
 fun MenuItemCard(
     item: MenuItem,
@@ -228,7 +199,6 @@ fun MenuItemCard(
                 .padding(12.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Image
             Image(
                 painter = painterResource(id = imageRes),
                 contentDescription = item.name,
@@ -241,7 +211,6 @@ fun MenuItemCard(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Item name
             Text(
                 text = item.name,
                 fontSize = 14.sp,
@@ -250,7 +219,6 @@ fun MenuItemCard(
                 textAlign = TextAlign.Center
             )
 
-            // Price
             Text(
                 text = "Harga: Rp ${String.format("%,d", item.price)}",
                 fontSize = 12.sp,
@@ -260,7 +228,6 @@ fun MenuItemCard(
 
             if (isSelected) {
                 Spacer(modifier = Modifier.height(4.dp))
-                // Quantity controls
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier

@@ -43,14 +43,13 @@ fun CartScreen(
 ) {
     val totalPrice = cartItems.sumOf { it.menuItem.price * it.quantity }
 
-    // Function to get image resource based on menu item name
     fun getImageResource(menuName: String): Int {
         return when (menuName) {
             "Nasi Goreng" -> R.drawable.nasgor
             "Mie Ayam" -> R.drawable.mieayam
-            "Es Teh" -> R.drawable.esteh
             "Es Jeruk" -> R.drawable.esjeruk
-            else -> R.drawable.nasgor // default fallback
+            "Teh manis" -> R.drawable.esteh
+            else -> R.drawable.nasgor
         }
     }
 
@@ -59,16 +58,12 @@ fun CartScreen(
             .fillMaxSize()
             .background(
                 brush = Brush.verticalGradient(
-                    colors = listOf(
-                        ColorBackground, // Putih di atas
-                        ColorPrimary    // Merah di bawah
-                    ),
+                    colors = listOf(ColorBackground, ColorPrimary),
                     startY = 0f,
                     endY = Float.POSITIVE_INFINITY
                 )
             )
     ) {
-        // Background Ombak di bawah
         Image(
             painter = painterResource(id = R.drawable.ombak),
             contentDescription = "Background Ombak",
@@ -84,14 +79,12 @@ fun CartScreen(
                 .fillMaxSize()
                 .padding(horizontal = 20.dp)
         ) {
-            // Header
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 50.dp, bottom = 20.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Back button
                 Box(
                     modifier = Modifier
                         .size(40.dp)
@@ -107,22 +100,19 @@ fun CartScreen(
                     )
                 }
 
-                // Title
                 Text(
-                    text = "Pembayaran Menu",
-                    fontSize = 22.sp,
+                    text = "Pembayaran Menu Kantin",
+                    fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color.Black,
                     modifier = Modifier.weight(1f),
                     textAlign = TextAlign.Center
                 )
 
-                // Spacer for balance (same width as back button)
                 Spacer(modifier = Modifier.size(40.dp))
             }
 
             if (cartItems.isEmpty()) {
-                // Empty cart message
                 Box(
                     modifier = Modifier
                         .weight(1f)
@@ -136,7 +126,6 @@ fun CartScreen(
                     )
                 }
             } else {
-                // Cart items list
                 LazyColumn(
                     modifier = Modifier.weight(1f),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -152,13 +141,11 @@ fun CartScreen(
                     }
                 }
 
-                // Total and payment button section
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(vertical = 20.dp)
                 ) {
-                    // Total section
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -166,7 +153,7 @@ fun CartScreen(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(
-                            text = "Total Tiket (${cartItems.size})",
+                            text = "Total Item (${cartItems.size})",
                             fontSize = 14.sp,
                             color = Color.Black,
                             fontWeight = FontWeight.Medium
@@ -198,18 +185,14 @@ fun CartScreen(
                         )
                     }
 
-                    // Payment button
                     Button(
-                        onClick = {
-                            println("Proceeding to payment with total: $totalPrice")
-                            onProceedToPayment(totalPrice)
-                        },
+                        onClick = { onProceedToPayment(totalPrice) },
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(top = 16.dp)
                             .height(48.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF1976D2) // Blue color like in the UI
+                            containerColor = Color(0xFF1976D2)
                         ),
                         shape = RoundedCornerShape(8.dp)
                     ) {
@@ -226,6 +209,7 @@ fun CartScreen(
     }
 }
 
+// Tambahkan kembali kode CartItemCard di sini
 @Composable
 fun CartItemCard(
     cartItem: CartItem,
@@ -245,7 +229,6 @@ fun CartItemCard(
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Image
             Image(
                 painter = painterResource(id = imageRes),
                 contentDescription = cartItem.menuItem.name,
@@ -257,7 +240,6 @@ fun CartItemCard(
 
             Spacer(modifier = Modifier.width(12.dp))
 
-            // Item details
             Column(
                 modifier = Modifier.weight(1f)
             ) {
@@ -274,7 +256,6 @@ fun CartItemCard(
                 )
             }
 
-            // Quantity controls with + and -
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
@@ -293,6 +274,8 @@ fun CartItemCard(
                         .clickable {
                             if (cartItem.quantity > 1) {
                                 onQuantityChange(cartItem.quantity - 1)
+                            } else {
+                                onQuantityChange(0) // Hapus item jika kuantitas menjadi 0
                             }
                         }
                         .padding(horizontal = 8.dp, vertical = 4.dp)

@@ -196,7 +196,7 @@ fun DestinationItemCard(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .height(200.dp)
+            .height(220.dp)
             .clickable {
                 if (!isSelected) {
                     onQuantityIncrease()

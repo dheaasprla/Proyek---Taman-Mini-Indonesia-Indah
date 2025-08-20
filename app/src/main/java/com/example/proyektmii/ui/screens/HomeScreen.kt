@@ -1,9 +1,9 @@
-package com.example.proyektmii.ui.screens // Pastikan ini 'screens' dengan huruf kecil
+package com.example.proyektmii.ui.screens
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable // Impor ini untuk interaksi klik
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -32,16 +32,17 @@ import com.example.proyektmii.ui.theme.ProyekTMIITheme
 data class FeatureItem(
     val iconRes: Int,
     val text: String,
-    val type: String // Tambahkan field 'type' untuk identifikasi fitur
+    val type: String
 )
 
 @Composable
-fun HomeScreen(onCardClick: (String) -> Unit) { // Tambahkan parameter onCardClick
+fun HomeScreen(onCardClick: (String) -> Unit) {
     val featureItems = listOf(
         FeatureItem(R.drawable.pintumasuk, "Pintu Masuk", "Pintu Masuk"),
         FeatureItem(R.drawable.parkir, "Parkir", "Parkir"),
         FeatureItem(R.drawable.destinasi, "Destinasi", "Destinasi"),
-        FeatureItem(R.drawable.kantin, "Kantin", "Kantin")
+        FeatureItem(R.drawable.kantin, "Kantin", "Kantin"),
+        FeatureItem(R.drawable.ceksaldo, "Cek Saldo", "Cek Saldo")
     )
 
     val gradientTextStyle = TextStyle(
@@ -79,7 +80,7 @@ fun HomeScreen(onCardClick: (String) -> Unit) { // Tambahkan parameter onCardCli
                     FeatureGridCard(
                         iconRes = item.iconRes,
                         text = item.text,
-                        onClick = { onCardClick(item.type) } // Panggil callback saat diklik
+                        onClick = { onCardClick(item.type) }
                     )
                 }
             }
@@ -109,7 +110,6 @@ fun HomeScreen(onCardClick: (String) -> Unit) { // Tambahkan parameter onCardCli
                         style = gradientTextStyle
                     )
                 }
-
                 Spacer(modifier = Modifier.height(16.dp))
                 Box(
                     modifier = Modifier
@@ -123,13 +123,13 @@ fun HomeScreen(onCardClick: (String) -> Unit) { // Tambahkan parameter onCardCli
 }
 
 @Composable
-fun FeatureGridCard(iconRes: Int, text: String, onClick: () -> Unit) { // Tambahkan parameter onClick
+fun FeatureGridCard(iconRes: Int, text: String, onClick: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .height(150.dp)
             .border(2.dp, Color.Red, RoundedCornerShape(16.dp))
-            .clickable(onClick = onClick), // Tambahkan modifier clickable
+            .clickable(onClick = onClick),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White)
@@ -154,13 +154,5 @@ fun FeatureGridCard(iconRes: Int, text: String, onClick: () -> Unit) { // Tambah
                 color = ColorPrimary
             )
         }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun HomeScreenPreview() {
-    ProyekTMIITheme {
-        HomeScreen(onCardClick = {})
     }
 }

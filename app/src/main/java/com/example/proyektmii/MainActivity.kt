@@ -11,12 +11,15 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.*
+import com.example.proyektmii.data.CardData
 import com.example.proyektmii.data.CartItem
 import com.example.proyektmii.data.PaymentHistoryItem
 import com.example.proyektmii.data.TicketItem
 import com.example.proyektmii.data.local.AppPreferences
 import com.example.proyektmii.ui.screens.*
 import com.example.proyektmii.ui.theme.ProyekTMIITheme
+import java.text.SimpleDateFormat
+import java.util.*
 
 class MainActivity : ComponentActivity() {
     private var nfcAdapter: NfcAdapter? = null
@@ -25,7 +28,10 @@ class MainActivity : ComponentActivity() {
     private var currentScreen by mutableStateOf("onboarding")
     private var isNfcTapped by mutableStateOf(false)
     private var totalPrice by mutableStateOf(0)
+    // Hapus variabel topUpAmount
+    // private var topUpAmount by mutableStateOf(0)
 
+    private var cardData by mutableStateOf<CardData?>(null)
     private var cartItems by mutableStateOf(listOf<CartItem>())
     private var selectedTicket by mutableStateOf<TicketItem?>(null)
     private var isWahanaSelected by mutableStateOf(false)
@@ -58,6 +64,17 @@ class MainActivity : ComponentActivity() {
                             "Destinasi" -> {
                                 selectedTicket = appPreferences.getTicketItem()
                                 currentScreen = "destinationMenu"
+                            }
+                            // Hapus case "Isi Saldo"
+                            // "Isi Saldo" -> {
+                            //    cardId = null
+                            //     isNfcTapped = false
+                            //    currentScreen = "isiSaldo"
+                            // }
+                            "Cek Saldo" -> {
+                                cardData = null
+                                isNfcTapped = false
+                                currentScreen = "cekSaldo"
                             }
                         }
                     })
@@ -166,11 +183,9 @@ class MainActivity : ComponentActivity() {
                         totalPrice = totalPrice,
                         nfcTapped = isNfcTapped,
                         onNfcProcessed = {
-                            Log.d("TMII_APP", "NFC processed for general payment")
                             isNfcTapped = false
                         },
                         onPaymentSuccess = { paidAmount ->
-                            Log.d("TMII_APP", "General payment successful: $paidAmount")
                             val currentTime = System.currentTimeMillis()
                             val transactionType = if (selectedTicket != null) "Tiket" else "Kantin"
                             val itemsList = if (selectedTicket != null) {
@@ -189,7 +204,6 @@ class MainActivity : ComponentActivity() {
                             )
                             appPreferences.addPaymentToHistory(newHistoryItem)
 
-                            // Clear relevant data after payment
                             if (selectedTicket != null) {
                                 appPreferences.saveTicketItem(null)
                                 selectedTicket = null
@@ -208,6 +222,11 @@ class MainActivity : ComponentActivity() {
                         totalPrice = totalPrice,
                         onBackToHome = { currentScreen = "home" }
                     )
+                    "cekSaldo" -> CheckBalanceScreen(
+                        onBack = { currentScreen = "home" },
+                        cardData = cardData,
+                        isProcessing = isNfcTapped
+                    )
                 }
             }
         }
@@ -224,7 +243,6 @@ class MainActivity : ComponentActivity() {
     private fun handleNfcTag() {
         Log.d("TMII_APP", "NFC terdeteksi di layar: $currentScreen")
 
-        // Logika untuk menyimpan data user dan cardId saat ini
         if (cardId != null && userName != null) {
             appPreferences.saveUserData(cardId!!, userName!!)
             Log.d("TMII_APP", "Saving current user data: Card ID = $cardId, Name = $userName")
@@ -246,14 +264,19 @@ class MainActivity : ComponentActivity() {
                     currentScreen = "parkingCheckinSuccess"
                 } else {
                     Log.d("TMII_APP", "Processing parking check-out")
-                    // Set flag untuk trigger LaunchedEffect di ParkingCheckoutScreen
                     isNfcTapped = true
                 }
             }
             "payment" -> {
                 Log.d("TMII_APP", "Processing payment")
-                // Set flag untuk trigger LaunchedEffect di PaymentScreen
                 isNfcTapped = true
+            }
+            // Hapus case "isiSaldo", "isiSaldoPayment", dan "isiSaldoSuccess"
+            "cekSaldo" -> {
+                Log.d("TMII_APP", "Processing balance check")
+                isNfcTapped = true
+                // Simulasikan data kartu setelah NFC di-tap
+                cardData = CardData(id = cardId ?: "000000000000", balance = 20000)
             }
         }
     }
@@ -283,18 +306,15 @@ class MainActivity : ComponentActivity() {
             val tagIdBytes = tag?.id
             val cardIdHex = tagIdBytes?.toHexString() ?: "ID_unknown"
 
-            // Perbarui state cardId dan userName
             cardId = cardIdHex
             userName = "Pengunjung-" + cardIdHex.substring(cardIdHex.length - 4, cardIdHex.length)
 
             Log.d("TMII_APP", "Kartu terdeteksi. ID: $cardId, Screen: $currentScreen")
             Toast.makeText(this, "Kartu terdeteksi. ID: $cardId", Toast.LENGTH_SHORT).show()
 
-            // Langsung panggil handleNfcTag
             handleNfcTag()
         }
     }
 
-    // Fungsi helper untuk mengubah byte array menjadi string heksadesimal
     private fun ByteArray.toHexString() = joinToString("") { "%02x".format(it) }
 }

@@ -17,10 +17,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -33,54 +29,37 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.proyektmii.R
+import com.example.proyektmii.data.CartItem
+import com.example.proyektmii.data.MenuItem
 import com.example.proyektmii.ui.theme.ColorBackground
 import com.example.proyektmii.ui.theme.ColorPrimary
 
-data class CartItem(
-    val menuItem: MenuItem,
-    var quantity: Int = 1
-)
-
 @Composable
 fun CanteenMenuScreen(
+    cartItems: List<CartItem>,
     onProceedToCart: (List<CartItem>) -> Unit,
     onBack: (() -> Unit)? = null,
+    onUpdateCart: (List<CartItem>) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val menuItems = listOf(
-        MenuItem("Nasi Goreng", 20000),
-        MenuItem("Mie Ayam", 15000),
-        MenuItem("Es Jeruk", 8000),
-        MenuItem("Teh manis", 5000)
+        MenuItem("Nasi Goreng", 20000, R.drawable.nasgor),
+        MenuItem("Mie Ayam", 15000, R.drawable.mieayam),
+        MenuItem("Es Jeruk", 8000, R.drawable.esjeruk),
+        MenuItem("Teh manis", 5000, R.drawable.esteh)
     )
-    var cartItems by remember { mutableStateOf(listOf<CartItem>()) }
-
-    // Function to get image resource based on menu item name
-    fun getImageResource(menuName: String): Int {
-        return when (menuName) {
-            "Nasi Goreng" -> R.drawable.nasgor
-            "Mie Ayam" -> R.drawable.mieayam
-            "Es Jeruk" -> R.drawable.esjeruk
-            "Teh manis" -> R.drawable.esteh
-            else -> R.drawable.nasgor // default fallback
-        }
-    }
 
     Box(
         modifier = modifier
             .fillMaxSize()
             .background(
                 brush = Brush.verticalGradient(
-                    colors = listOf(
-                        ColorBackground, // Putih di atas
-                        ColorPrimary    // Merah di bawah
-                    ),
+                    colors = listOf(ColorBackground, ColorPrimary),
                     startY = 0f,
                     endY = Float.POSITIVE_INFINITY
                 )
             )
     ) {
-        // Background Ombak di bawah
         Image(
             painter = painterResource(id = R.drawable.ombak),
             contentDescription = "Background Ombak",
@@ -96,14 +75,12 @@ fun CanteenMenuScreen(
                 .fillMaxSize()
                 .padding(horizontal = 20.dp)
         ) {
-            // Header
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 50.dp, bottom = 20.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Back button
                 Box(
                     modifier = Modifier
                         .size(40.dp)
@@ -119,7 +96,6 @@ fun CanteenMenuScreen(
                     )
                 }
 
-                // Title
                 Text(
                     text = "Kantin",
                     fontSize = 22.sp,
@@ -129,11 +105,9 @@ fun CanteenMenuScreen(
                     textAlign = TextAlign.Center
                 )
 
-                // Spacer for balance (same width as back button)
                 Spacer(modifier = Modifier.size(40.dp))
             }
 
-            // Menu Grid
             LazyVerticalGrid(
                 columns = GridCells.Fixed(2),
                 modifier = Modifier.weight(1f),
@@ -141,60 +115,73 @@ fun CanteenMenuScreen(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 items(menuItems) { item ->
-                    val existingCartItem = cartItems.find { it.menuItem == item }
+                    val existingCartItem = cartItems.find { it.menuItem.name == item.name }
                     val currentQuantity = existingCartItem?.quantity ?: 0
 
                     MenuItemCard(
                         item = item,
-                        imageRes = getImageResource(item.name),
+                        imageRes = item.imageRes ?: R.drawable.nasgor,
                         quantity = currentQuantity,
                         onQuantityIncrease = {
-                            cartItems = if (existingCartItem != null) {
-                                cartItems.map {
-                                    if (it.menuItem == item) it.copy(quantity = it.quantity + 1)
-                                    else it
-                                }
+                            val updatedCartItems = if (existingCartItem != null) {
+                                cartItems.map { if (it.menuItem.name == item.name) it.copy(quantity = it.quantity + 1) else it }
                             } else {
                                 cartItems + CartItem(item, 1)
                             }
+                            onUpdateCart(updatedCartItems)
                         },
                         onQuantityDecrease = {
-                            if (existingCartItem != null) {
-                                if (existingCartItem.quantity > 1) {
-                                    cartItems = cartItems.map {
-                                        if (it.menuItem == item) it.copy(quantity = it.quantity - 1)
-                                        else it
-                                    }
-                                } else {
-                                    cartItems = cartItems.filter { it.menuItem != item }
-                                }
+                            val updatedCartItems = if (existingCartItem != null && existingCartItem.quantity > 1) {
+                                cartItems.map { if (it.menuItem.name == item.name) it.copy(quantity = it.quantity - 1) else it }
+                            } else {
+                                cartItems.filter { it.menuItem.name != item.name }
                             }
-                        },
-                        isSelected = existingCartItem != null
+                            onUpdateCart(updatedCartItems)
+                        }
                     )
                 }
             }
 
-            // Proceed to cart button
-            Button(
-                onClick = { onProceedToCart(cartItems) },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 20.dp)
-                    .height(48.dp),
-                enabled = cartItems.isNotEmpty(),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF1976D2),
-                    disabledContainerColor = Color.Gray
-                ),
-                shape = RoundedCornerShape(8.dp)
-            ) {
-                Text(
-                    text = "Lanjut ke Keranjang",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = Color.White
-                )
+            // Ringkasan Keranjang di Bawah
+            if (cartItems.isNotEmpty()) {
+                val totalItems = cartItems.sumOf { it.quantity }
+                val totalPrice = cartItems.sumOf { it.menuItem.price * it.quantity }
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp)
+                        .background(Color(0xFFE3F2FD), shape = RoundedCornerShape(12.dp))
+                        .padding(16.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column {
+                            Text(
+                                text = "Total Pesanan",
+                                fontSize = 14.sp,
+                                color = Color.Gray
+                            )
+                            Text(
+                                text = "(${totalItems} item) Rp ${String.format("%,d", totalPrice)}",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.Black
+                            )
+                        }
+                        Button(
+                            onClick = { onProceedToCart(cartItems) },
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1976D2)),
+                            shape = RoundedCornerShape(8.dp)
+                        ) {
+                            Text(text = "Bayar")
+                        }
+                    }
+                }
+            } else {
+                Spacer(modifier = Modifier.height(20.dp))
             }
         }
     }
@@ -207,20 +194,14 @@ fun MenuItemCard(
     quantity: Int,
     onQuantityIncrease: () -> Unit,
     onQuantityDecrease: () -> Unit,
-    isSelected: Boolean,
     modifier: Modifier = Modifier
 ) {
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .height(180.dp)
-            .clickable {
-                if (!isSelected) {
-                    onQuantityIncrease()
-                }
-            },
+            .height(250.dp),
         colors = CardDefaults.cardColors(
-            containerColor = if (isSelected) Color(0xFFF5F5F5) else ColorBackground
+            containerColor = ColorBackground
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
         shape = RoundedCornerShape(12.dp)
@@ -231,7 +212,6 @@ fun MenuItemCard(
                 .padding(12.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Image
             Image(
                 painter = painterResource(id = imageRes),
                 contentDescription = item.name,
@@ -244,60 +224,102 @@ fun MenuItemCard(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Item name
             Text(
                 text = item.name,
-                fontSize = 14.sp,
+                fontSize = 13.sp,
                 fontWeight = FontWeight.Medium,
-                color = if (isSelected) Color(0xFF1976D2) else Color.Black,
+                color = Color.Black,
                 textAlign = TextAlign.Center
             )
 
-            // Price
             Text(
-                text = "Harga: Rp ${String.format("%,d", item.price)}",
+                text = "Rp ${String.format("%,d", item.price)}",
                 fontSize = 12.sp,
                 color = Color.Gray,
                 textAlign = TextAlign.Center
             )
 
-            if (isSelected) {
-                Spacer(modifier = Modifier.height(4.dp))
-                // Quantity controls
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Kondisi untuk menampilkan tombol
+            if (quantity > 0) {
+                // Jika sudah dipilih, tampilkan tombol + - dengan jumlah
                 Row(
-                    verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
+                        .fillMaxWidth()
+                        .height(36.dp)
                         .background(
                             Color(0xFF1976D2),
-                            shape = RoundedCornerShape(20.dp)
+                            shape = RoundedCornerShape(18.dp)
                         )
-                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                        .padding(horizontal = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        text = "−",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White,
+                    // Tombol minus
+                    Box(
                         modifier = Modifier
-                            .clickable { onQuantityDecrease() }
-                            .padding(4.dp)
-                    )
+                            .size(12.dp)
+                            .background(
+                                Color.White.copy(alpha = 0.2f),
+                                shape = RoundedCornerShape(14.dp)
+                            )
+                            .clickable { onQuantityDecrease() },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "−",
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                    }
 
+                    // Tampilkan jumlah
                     Text(
                         text = quantity.toString(),
-                        fontSize = 14.sp,
-                        color = Color.White,
-                        modifier = Modifier.padding(horizontal = 8.dp)
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
                     )
 
-                    Text(
-                        text = "+",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White,
+                    // Tombol plus
+                    Box(
                         modifier = Modifier
-                            .clickable { onQuantityIncrease() }
-                            .padding(4.dp)
+                            .size(25.dp)
+                            .background(
+                                Color.White.copy(alpha = 0.2f),
+                                shape = RoundedCornerShape(14.dp)
+                            )
+                            .clickable { onQuantityIncrease() },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "+",
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                    }
+                }
+            } else {
+                // Jika belum dipilih, tampilkan tombol "Tambah"
+                Button(
+                    onClick = onQuantityIncrease,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF1976D2)
+                    ),
+                    shape = RoundedCornerShape(18.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(36.dp),
+                    contentPadding = PaddingValues(horizontal = 14.dp, vertical = 4.dp)
+                ) {
+                    Text(
+                        text = "Tambah",
+                        fontSize = 12.sp,
+                        color = Color.White,
+                        fontWeight = FontWeight.Medium
                     )
                 }
             }

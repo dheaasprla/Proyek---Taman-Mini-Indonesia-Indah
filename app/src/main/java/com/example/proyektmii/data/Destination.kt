@@ -1,5 +1,6 @@
-package com.example.proyektmii.ui.screens
+package com.example.proyektmii.data
 
+// Data class dan fungsi lainnya
 data class Destination(
     val name: String,
     val price: Int,

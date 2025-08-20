@@ -51,20 +51,21 @@ fun ParkingCheckoutScreen(
 ) {
     var isProcessing by remember { mutableStateOf(false) }
 
-    // Format waktu
     val dateFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
     val currentTime = System.currentTimeMillis()
     val entryTimeFormatted = dateFormat.format(Date(entryTime))
     val exitTimeFormatted = dateFormat.format(Date(currentTime))
 
-    // Mulai pemrosesan saat NFC di-tap
     LaunchedEffect(nfcTapped) {
         if (nfcTapped && !isProcessing) {
             isProcessing = true
-            delay(2000) // Simulasi pemrosesan 2 detik
-            onPaymentSuccess(totalPrice)
-            onNfcProcessed()
-            isProcessing = false
+            try {
+                delay(500)
+                onPaymentSuccess(totalPrice)
+            } finally {
+                onNfcProcessed()
+                isProcessing = false
+            }
         }
     }
 
@@ -74,14 +75,10 @@ fun ParkingCheckoutScreen(
                 .fillMaxSize()
                 .background(
                     brush = Brush.verticalGradient(
-                        colors = listOf(
-                            ColorPositive, // Kuning di atas
-                            ColorBackground // Putih di bawah
-                        )
+                        colors = listOf(ColorPositive, ColorBackground)
                     )
                 )
         ) {
-            // Background Pattern Awan - hanya di atas
             Image(
                 painter = painterResource(id = R.drawable.awan),
                 contentDescription = "Background Pattern",
@@ -91,8 +88,6 @@ fun ParkingCheckoutScreen(
                     .align(Alignment.TopCenter),
                 contentScale = ContentScale.FillWidth
             )
-
-            // Background Ombak di bawah
             Image(
                 painter = painterResource(id = R.drawable.ombak),
                 contentDescription = "Background Ombak",
@@ -102,22 +97,17 @@ fun ParkingCheckoutScreen(
                     .align(Alignment.BottomCenter),
                 contentScale = ContentScale.FillWidth
             )
-
-            // Konten utama
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = 20.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+                    .padding(horizontal = 20.dp)
             ) {
-                // Header
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(top = 50.dp, bottom = 20.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Back button
                     Box(
                         modifier = Modifier
                             .size(40.dp)
@@ -132,8 +122,6 @@ fun ParkingCheckoutScreen(
                             tint = Color.Black
                         )
                     }
-
-                    // Title
                     Text(
                         text = "Pembayaran Parkir",
                         fontSize = 22.sp,
@@ -142,18 +130,13 @@ fun ParkingCheckoutScreen(
                         modifier = Modifier.weight(1f),
                         textAlign = TextAlign.Center
                     )
-
-                    // Logo TMII
                     Image(
                         painter = painterResource(id = R.drawable.tmii_logo),
                         contentDescription = "TMII Logo",
                         modifier = Modifier.size(40.dp)
                     )
                 }
-
                 Spacer(modifier = Modifier.height(20.dp))
-
-                // Informasi waktu parkir
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -167,9 +150,7 @@ fun ParkingCheckoutScreen(
                         fontWeight = FontWeight.Bold,
                         color = Color.Black
                     )
-
                     Spacer(modifier = Modifier.height(12.dp))
-
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
@@ -186,7 +167,6 @@ fun ParkingCheckoutScreen(
                             color = Color.Black
                         )
                     }
-
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
@@ -203,33 +183,26 @@ fun ParkingCheckoutScreen(
                             color = Color.Black
                         )
                     }
-
                     Spacer(modifier = Modifier.height(8.dp))
-
                     Text(
-                        text = "Total: Rp $totalPrice",
+                        text = "Total: Rp ${String.format("%,d", totalPrice)}",
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
                         color = ColorPrimary
                     )
                 }
-
                 Spacer(modifier = Modifier.height(30.dp))
-
-                // Konten tengah - Card Icon atau Processing
                 Column(
-                    horizontalAlignment = Alignment.CenterHorizontally
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.fillMaxWidth()
                 ) {
                     if (isProcessing) {
-                        // Show processing state
                         CircularProgressIndicator(
                             modifier = Modifier.size(100.dp),
                             color = ColorPrimary,
                             strokeWidth = 6.dp
                         )
-
                         Spacer(modifier = Modifier.height(20.dp))
-
                         Text(
                             text = "Memproses\nPembayaran...",
                             fontSize = 24.sp,
@@ -239,16 +212,12 @@ fun ParkingCheckoutScreen(
                             lineHeight = 28.sp
                         )
                     } else {
-                        // Card image
                         Image(
                             painter = painterResource(id = R.drawable.kartu),
                             contentDescription = "Kartu",
                             modifier = Modifier.size(120.dp)
                         )
-
                         Spacer(modifier = Modifier.height(15.dp))
-
-                        // Text instruction
                         Text(
                             text = "Silahkan\nTap Kartu",
                             fontSize = 24.sp,
@@ -257,22 +226,12 @@ fun ParkingCheckoutScreen(
                             textAlign = TextAlign.Center,
                             lineHeight = 28.sp
                         )
-
                         Spacer(modifier = Modifier.height(15.dp))
-
-                        // NFC Tap area
                         Box(
                             modifier = Modifier
                                 .size(180.dp)
-                                .border(
-                                    3.dp,
-                                    ColorWarning,
-                                    shape = RoundedCornerShape(12.dp)
-                                )
-                                .background(
-                                    ColorBackground,
-                                    shape = RoundedCornerShape(12.dp)
-                                )
+                                .border(3.dp, ColorWarning, shape = RoundedCornerShape(12.dp))
+                                .background(ColorBackground, shape = RoundedCornerShape(12.dp))
                                 .clip(RoundedCornerShape(12.dp)),
                             contentAlignment = Alignment.Center
                         ) {
@@ -285,24 +244,8 @@ fun ParkingCheckoutScreen(
                         }
                     }
                 }
-
                 Spacer(modifier = Modifier.weight(1f))
             }
         }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun ParkingCheckoutScreenPreview() {
-    ProyekTMIITheme {
-        ParkingCheckoutScreen(
-            entryTime = System.currentTimeMillis() - 3600000, // 1 jam yang lalu
-            totalPrice = 10000,
-            nfcTapped = false,
-            onNfcProcessed = {},
-            onPaymentSuccess = {},
-            onBack = {}
-        )
     }
 }

@@ -1,5 +1,6 @@
 package com.example.proyektmii.ui.screens
 
+import com.example.proyektmii.data.CardData
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -24,11 +25,14 @@ import com.example.proyektmii.R
 import com.example.proyektmii.ui.theme.ProyekTMIITheme
 import com.example.proyektmii.ui.theme.ColorPrimary
 import com.example.proyektmii.ui.theme.ColorBackground
+import java.text.NumberFormat
+import java.util.Locale
 
 @Composable
 fun ParkingCheckoutSuccessScreen(
     totalPrice: Int,
     onBackToHome: () -> Unit,
+    cardData: CardData? = null, // Tambahkan parameter untuk saldo terbaru
     modifier: Modifier = Modifier
 ) {
     ProyekTMIITheme {
@@ -140,12 +144,24 @@ fun ParkingCheckoutSuccessScreen(
 
                     // Tampilkan total yang dibayarkan
                     Text(
-                        text = "Total: Rp $totalPrice",
+                        text = "Total: Rp ${NumberFormat.getNumberInstance(Locale("in", "ID")).format(totalPrice)}",
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Medium,
                         color = Color.Black,
                         textAlign = TextAlign.Center
                     )
+
+                    // Tampilkan saldo tersisa
+                    cardData?.let { data ->
+                        Spacer(modifier = Modifier.height(15.dp))
+                        Text(
+                            text = "Saldo Tersisa: Rp ${NumberFormat.getNumberInstance(Locale("in", "ID")).format(data.balance)}",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = Color.Black,
+                            textAlign = TextAlign.Center
+                        )
+                    }
                 }
 
                 Spacer(modifier = Modifier.weight(1f))
@@ -160,7 +176,8 @@ fun ParkingCheckoutSuccessScreenPreview() {
     ProyekTMIITheme {
         ParkingCheckoutSuccessScreen(
             totalPrice = 10000,
-            onBackToHome = {}
+            onBackToHome = {},
+            cardData = CardData(id = "04A1B2C3D4E5F6", balance = 90000) // Contoh saldo
         )
     }
 }

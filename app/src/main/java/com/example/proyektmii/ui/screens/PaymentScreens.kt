@@ -12,7 +12,6 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -34,7 +33,6 @@ import com.example.proyektmii.ui.theme.ColorPrimary
 import com.example.proyektmii.ui.theme.ColorBackground
 import com.example.proyektmii.ui.theme.ColorWarning
 import com.example.proyektmii.ui.theme.ColorPositive
-import kotlinx.coroutines.delay
 
 @Composable
 fun PaymentScreen(
@@ -47,18 +45,8 @@ fun PaymentScreen(
 ) {
     var isProcessing by remember { mutableStateOf(false) }
 
-    LaunchedEffect(nfcTapped) {
-        if (nfcTapped && !isProcessing) {
-            isProcessing = true
-            try {
-                delay(500)
-                onPaymentSuccess(totalPrice)
-            } finally {
-                onNfcProcessed()
-                isProcessing = false
-            }
-        }
-    }
+    // Hapus LaunchedEffect yang otomatis memanggil onPaymentSuccess
+    // Logika pembayaran akan ditangani di MainActivity setelah NFC diproses
 
     ProyekTMIITheme {
         Box(
@@ -150,6 +138,22 @@ fun PaymentScreen(
                         Spacer(modifier = Modifier.height(20.dp))
                         Text(
                             text = "Memproses\nPembayaran...",
+                            fontSize = 24.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.Black,
+                            textAlign = TextAlign.Center,
+                            lineHeight = 28.sp
+                        )
+                    } else if (nfcTapped) {
+                        // Tampilkan status menunggu pemrosesan setelah tap
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(100.dp),
+                            color = ColorPrimary,
+                            strokeWidth = 6.dp
+                        )
+                        Spacer(modifier = Modifier.height(20.dp))
+                        Text(
+                            text = "Menunggu\nVerifikasi Kartu...",
                             fontSize = 24.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color.Black,

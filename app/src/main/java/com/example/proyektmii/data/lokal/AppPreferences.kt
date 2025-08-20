@@ -21,22 +21,24 @@ class AppPreferences(context: Context) {
         private const val KEY_USER_CARD_ID = "user_card_id"
         private const val KEY_USER_NAME = "user_name"
         private const val KEY_PAYMENT_HISTORY = "payment_history"
-        private const val KEY_CARD_DATA = "card_data"
+        private const val KEY_CARD_DATA_PREFIX = "card_data_"
+        private const val KEY_FIRST_RUN = "first_run"
     }
 
-    fun saveCardData(cardData: CardData?) {
+    fun isFirstRun(): Boolean = preferences.getBoolean(KEY_FIRST_RUN, true)
+    fun setFirstRun(value: Boolean) = preferences.edit().putBoolean(KEY_FIRST_RUN, value).apply()
+
+    fun saveCardData(cardId: String, name: String, balance: Int) {
         val editor = preferences.edit()
-        if (cardData == null) {
-            editor.remove(KEY_CARD_DATA)
-        } else {
-            val json = gson.toJson(cardData)
-            editor.putString(KEY_CARD_DATA, json)
-        }
+        val cardData = CardData(cardId, balance)
+        val json = gson.toJson(cardData)
+        editor.putString("${KEY_CARD_DATA_PREFIX}$cardId", json)
+        editor.putString("${KEY_USER_NAME}_$cardId", name)
         editor.apply()
     }
 
-    fun getCardData(): CardData? {
-        val json = preferences.getString(KEY_CARD_DATA, null)
+    fun getCardData(cardId: String): CardData? {
+        val json = preferences.getString("${KEY_CARD_DATA_PREFIX}$cardId", null)
         return if (json != null) {
             try {
                 gson.fromJson(json, CardData::class.java)
@@ -55,13 +57,8 @@ class AppPreferences(context: Context) {
             .apply()
     }
 
-    fun getUserCardId(): String? {
-        return preferences.getString(KEY_USER_CARD_ID, null)
-    }
-
-    fun getUserName(): String? {
-        return preferences.getString(KEY_USER_NAME, null)
-    }
+    fun getUserCardId(): String? = preferences.getString(KEY_USER_CARD_ID, null)
+    fun getUserName(): String? = preferences.getString(KEY_USER_NAME, null)
 
     fun addPaymentToHistory(item: PaymentHistoryItem) {
         val history = getPaymentHistory().toMutableList()

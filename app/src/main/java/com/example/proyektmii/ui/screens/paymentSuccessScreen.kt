@@ -24,12 +24,16 @@ import com.example.proyektmii.R
 import com.example.proyektmii.ui.theme.ProyekTMIITheme
 import com.example.proyektmii.ui.theme.ColorPrimary
 import com.example.proyektmii.ui.theme.ColorBackground
+import com.example.proyektmii.data.CardData
+import java.text.NumberFormat
+import java.util.Locale
 
 @Composable
 fun PaymentSuccessScreen(
     totalPrice: Int,
     onBackToHome: () -> Unit,
     successMessage: String = "Pembayaran Berhasil", // Parameter opsional untuk pesan kustom
+    cardData: CardData? = null, // Tambahkan parameter untuk sisa saldo
     modifier: Modifier = Modifier
 ) {
     ProyekTMIITheme {
@@ -147,6 +151,18 @@ fun PaymentSuccessScreen(
                         color = Color.Black,
                         textAlign = TextAlign.Center
                     )
+
+                    // Tampilkan sisa saldo
+                    cardData?.let { data ->
+                        Spacer(modifier = Modifier.height(15.dp))
+                        Text(
+                            text = "Sisa Saldo: Rp ${NumberFormat.getNumberInstance(Locale("in", "ID")).format(data.balance)}",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = Color.Black,
+                            textAlign = TextAlign.Center
+                        )
+                    }
                 }
 
                 Spacer(modifier = Modifier.weight(1f))
@@ -161,7 +177,8 @@ fun PaymentSuccessScreenPreview() {
     ProyekTMIITheme {
         PaymentSuccessScreen(
             totalPrice = 50000,
-            onBackToHome = {}
+            onBackToHome = {},
+            cardData = CardData(id = "123456", balance = 45000) // Contoh data saldo
         )
     }
 }

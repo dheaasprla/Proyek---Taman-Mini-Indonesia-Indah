@@ -1,5 +1,6 @@
 package com.example.proyektmii.ui.screens
 
+import com.example.proyektmii.data.CardData
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -8,7 +9,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowBack // Ganti import
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -24,11 +25,14 @@ import com.example.proyektmii.R
 import com.example.proyektmii.ui.theme.ProyekTMIITheme
 import com.example.proyektmii.ui.theme.ColorPrimary
 import com.example.proyektmii.ui.theme.ColorBackground
+import java.text.NumberFormat
+import java.util.Locale
 
 @Composable
 fun ParkingCheckoutSuccessScreen(
     totalPrice: Int,
     onBackToHome: () -> Unit,
+    cardData: CardData? = null,
     modifier: Modifier = Modifier
 ) {
     ProyekTMIITheme {
@@ -37,7 +41,6 @@ fun ParkingCheckoutSuccessScreen(
                 .fillMaxSize()
                 .background(ColorPrimary)
         ) {
-            // Background Awan Kuning
             Image(
                 painter = painterResource(id = R.drawable.awan),
                 contentDescription = "Background Pattern Top",
@@ -48,7 +51,6 @@ fun ParkingCheckoutSuccessScreen(
                 contentScale = ContentScale.Crop
             )
 
-            // Background Awan di bawah
             Image(
                 painter = painterResource(id = R.drawable.awan),
                 contentDescription = "Background Pattern Bottom",
@@ -60,7 +62,6 @@ fun ParkingCheckoutSuccessScreen(
                 contentScale = ContentScale.Crop
             )
 
-            // Background Ombak di bawah
             Image(
                 painter = painterResource(id = R.drawable.ombak),
                 contentDescription = "Background Ombak",
@@ -71,7 +72,6 @@ fun ParkingCheckoutSuccessScreen(
                 contentScale = ContentScale.FillWidth
             )
 
-            // Konten utama
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -79,7 +79,6 @@ fun ParkingCheckoutSuccessScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Top
             ) {
-                // Header dengan tombol kembali
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -94,7 +93,7 @@ fun ParkingCheckoutSuccessScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            imageVector = Icons.Filled.ArrowBack, // Ganti penggunaan ikon
                             contentDescription = "Kembali",
                             modifier = Modifier.size(24.dp),
                             tint = Color.Black
@@ -103,21 +102,16 @@ fun ParkingCheckoutSuccessScreen(
                 }
 
                 Spacer(modifier = Modifier.weight(1f))
-
-                // Konten tengah: Ikon dan Teks
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    // Ikon sukses
                     Image(
-                        painter = painterResource(id = R.drawable.berhasil), // Centang
+                        painter = painterResource(id = R.drawable.berhasil),
                         contentDescription = "Sukses",
-                        modifier = Modifier.size(200.dp), // Ukuran diperbesar
+                        modifier = Modifier.size(200.dp),
                         contentScale = ContentScale.Fit
                     )
-
                     Spacer(modifier = Modifier.height(15.dp))
-
                     Text(
                         text = "SUKSES!",
                         fontSize = 36.sp,
@@ -125,9 +119,7 @@ fun ParkingCheckoutSuccessScreen(
                         color = Color.Black,
                         textAlign = TextAlign.Center
                     )
-
                     Spacer(modifier = Modifier.height(10.dp))
-
                     Text(
                         text = "Silahkan Keluar",
                         fontSize = 22.sp,
@@ -135,32 +127,27 @@ fun ParkingCheckoutSuccessScreen(
                         color = Color.Black,
                         textAlign = TextAlign.Center
                     )
-
                     Spacer(modifier = Modifier.height(15.dp))
-
-                    // Tampilkan total yang dibayarkan
                     Text(
-                        text = "Total: Rp $totalPrice",
+                        text = "Total: Rp ${NumberFormat.getNumberInstance(Locale("in", "ID")).format(totalPrice)}",
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Medium,
                         color = Color.Black,
                         textAlign = TextAlign.Center
                     )
+                    cardData?.let { data ->
+                        Spacer(modifier = Modifier.height(15.dp))
+                        Text(
+                            text = "Saldo Tersisa: Rp ${NumberFormat.getNumberInstance(Locale("in", "ID")).format(data.balance)}",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = Color.Black,
+                            textAlign = TextAlign.Center
+                        )
+                    }
                 }
-
                 Spacer(modifier = Modifier.weight(1f))
             }
         }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun ParkingCheckoutSuccessScreenPreview() {
-    ProyekTMIITheme {
-        ParkingCheckoutSuccessScreen(
-            totalPrice = 10000,
-            onBackToHome = {}
-        )
     }
 }

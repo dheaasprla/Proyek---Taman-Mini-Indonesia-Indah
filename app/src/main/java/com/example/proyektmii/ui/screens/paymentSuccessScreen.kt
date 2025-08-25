@@ -8,7 +8,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowBack // Ganti import
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -24,12 +24,16 @@ import com.example.proyektmii.R
 import com.example.proyektmii.ui.theme.ProyekTMIITheme
 import com.example.proyektmii.ui.theme.ColorPrimary
 import com.example.proyektmii.ui.theme.ColorBackground
+import com.example.proyektmii.data.CardData
+import java.text.NumberFormat
+import java.util.Locale
 
 @Composable
 fun PaymentSuccessScreen(
     totalPrice: Int,
     onBackToHome: () -> Unit,
-    successMessage: String = "Pembayaran Berhasil", // Parameter opsional untuk pesan kustom
+    successMessage: String = "Pembayaran Berhasil",
+    cardData: CardData? = null,
     modifier: Modifier = Modifier
 ) {
     ProyekTMIITheme {
@@ -38,7 +42,6 @@ fun PaymentSuccessScreen(
                 .fillMaxSize()
                 .background(ColorPrimary)
         ) {
-            // Background Awan Kuning
             Image(
                 painter = painterResource(id = R.drawable.awan),
                 contentDescription = "Background Pattern Top",
@@ -48,8 +51,6 @@ fun PaymentSuccessScreen(
                     .align(Alignment.TopCenter),
                 contentScale = ContentScale.Crop
             )
-
-            // Background Awan di bawah
             Image(
                 painter = painterResource(id = R.drawable.awan),
                 contentDescription = "Background Pattern Bottom",
@@ -60,8 +61,6 @@ fun PaymentSuccessScreen(
                     .offset(y = 10.dp),
                 contentScale = ContentScale.Crop
             )
-
-            // Background Ombak di bawah
             Image(
                 painter = painterResource(id = R.drawable.ombak),
                 contentDescription = "Background Ombak",
@@ -71,8 +70,6 @@ fun PaymentSuccessScreen(
                     .align(Alignment.BottomCenter),
                 contentScale = ContentScale.FillWidth
             )
-
-            // Konten utama
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -80,7 +77,6 @@ fun PaymentSuccessScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Top
             ) {
-                // Header dengan tombol kembali
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -95,30 +91,24 @@ fun PaymentSuccessScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            imageVector = Icons.Filled.ArrowBack, // Ganti penggunaan ikon
                             contentDescription = "Kembali",
                             modifier = Modifier.size(24.dp),
                             tint = Color.Black
                         )
                     }
                 }
-
                 Spacer(modifier = Modifier.weight(1f))
-
-                // Konten tengah: Ikon dan Teks
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    // Ikon sukses
                     Image(
-                        painter = painterResource(id = R.drawable.berhasil), // Centang
+                        painter = painterResource(id = R.drawable.berhasil),
                         contentDescription = "Sukses",
-                        modifier = Modifier.size(200.dp), // Ukuran diperbesar
+                        modifier = Modifier.size(200.dp),
                         contentScale = ContentScale.Fit
                     )
-
                     Spacer(modifier = Modifier.height(15.dp))
-
                     Text(
                         text = "SUKSES!",
                         fontSize = 36.sp,
@@ -126,9 +116,7 @@ fun PaymentSuccessScreen(
                         color = Color.Black,
                         textAlign = TextAlign.Center
                     )
-
                     Spacer(modifier = Modifier.height(10.dp))
-
                     Text(
                         text = "Selamat Menikmati",
                         fontSize = 22.sp,
@@ -136,32 +124,27 @@ fun PaymentSuccessScreen(
                         color = Color.Black,
                         textAlign = TextAlign.Center
                     )
-
                     Spacer(modifier = Modifier.height(15.dp))
-
-                    // Tampilkan total yang dibayarkan
                     Text(
-                        text = "Total: Rp $totalPrice",
+                        text = "Total: Rp ${String.format("%,d", totalPrice)}",
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Medium,
                         color = Color.Black,
                         textAlign = TextAlign.Center
                     )
+                    cardData?.let { data ->
+                        Spacer(modifier = Modifier.height(15.dp))
+                        Text(
+                            text = "Sisa Saldo: Rp ${NumberFormat.getNumberInstance(Locale("in", "ID")).format(data.balance)}",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = Color.Black,
+                            textAlign = TextAlign.Center
+                        )
+                    }
                 }
-
                 Spacer(modifier = Modifier.weight(1f))
             }
         }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun PaymentSuccessScreenPreview() {
-    ProyekTMIITheme {
-        PaymentSuccessScreen(
-            totalPrice = 50000,
-            onBackToHome = {}
-        )
     }
 }

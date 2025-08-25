@@ -28,8 +28,6 @@ class MainActivity : ComponentActivity() {
     private var currentScreen by mutableStateOf("onboarding")
     private var isNfcTapped by mutableStateOf(false)
     private var totalPrice by mutableStateOf(0)
-    // Hapus variabel topUpAmount
-    // private var topUpAmount by mutableStateOf(0)
 
     private var cardData by mutableStateOf<CardData?>(null)
     private var cartItems by mutableStateOf(listOf<CartItem>())
@@ -65,12 +63,6 @@ class MainActivity : ComponentActivity() {
                                 selectedTicket = appPreferences.getTicketItem()
                                 currentScreen = "destinationMenu"
                             }
-                            // Hapus case "Isi Saldo"
-                            // "Isi Saldo" -> {
-                            //    cardId = null
-                            //     isNfcTapped = false
-                            //    currentScreen = "isiSaldo"
-                            // }
                             "Cek Saldo" -> {
                                 cardData = null
                                 isNfcTapped = false
@@ -93,19 +85,31 @@ class MainActivity : ComponentActivity() {
                                 },
                                 onPaymentSuccess = { paidAmount ->
                                     Log.d("TMII_APP", "Parking payment successful: $paidAmount")
-                                    val newHistoryItem = PaymentHistoryItem(
-                                        cardId = cardId,
-                                        userName = userName,
-                                        transactionType = "Parkir",
-                                        items = listOf("Parkir"),
-                                        totalPrice = paidAmount,
-                                        timestamp = System.currentTimeMillis()
-                                    )
-                                    appPreferences.addPaymentToHistory(newHistoryItem)
-                                    appPreferences.clearParkingData()
-                                    parkingEntryTime = null
-                                    totalPrice = paidAmount
-                                    currentScreen = "parkingCheckoutSuccess"
+                                    cardData?.let { currentCard ->
+                                        if (currentCard.balance >= paidAmount) {
+                                            val newBalance = currentCard.balance - paidAmount
+                                            appPreferences.saveCardData(cardId!!, userName!!, newBalance)
+                                            cardData = currentCard.copy(balance = newBalance)
+
+                                            val newHistoryItem = PaymentHistoryItem(
+                                                cardId = cardId,
+                                                userName = userName,
+                                                transactionType = "Parkir",
+                                                items = listOf("Parkir"),
+                                                totalPrice = paidAmount,
+                                                timestamp = System.currentTimeMillis()
+                                            )
+                                            appPreferences.addPaymentToHistory(newHistoryItem)
+                                            appPreferences.clearParkingData()
+                                            parkingEntryTime = null
+                                            totalPrice = paidAmount
+                                            currentScreen = "parkingCheckoutSuccess"
+                                        } else {
+                                            Toast.makeText(this, "Saldo tidak cukup!", Toast.LENGTH_SHORT).show()
+                                        }
+                                    } ?: run {
+                                        Toast.makeText(this, "Data kartu tidak ditemukan!", Toast.LENGTH_SHORT).show()
+                                    }
                                 },
                                 onBack = { currentScreen = "home" }
                             )
@@ -114,7 +118,11 @@ class MainActivity : ComponentActivity() {
                         }
                     }
                     "parkingCheckinSuccess" -> ParkingCheckinSuccessScreen(onBackToHome = { currentScreen = "home" })
-                    "parkingCheckoutSuccess" -> ParkingCheckoutSuccessScreen(totalPrice = totalPrice, onBackToHome = { currentScreen = "home" })
+                    "parkingCheckoutSuccess" -> ParkingCheckoutSuccessScreen(
+                        totalPrice = totalPrice,
+                        onBackToHome = { currentScreen = "home" },
+                        cardData = cardData // Kirim saldo terbaru
+                    )
                     "canteenMenu" -> CanteenMenuScreen(
                         cartItems = cartItems,
                         onProceedToCart = { currentCartItems ->
@@ -186,35 +194,48 @@ class MainActivity : ComponentActivity() {
                             isNfcTapped = false
                         },
                         onPaymentSuccess = { paidAmount ->
-                            val currentTime = System.currentTimeMillis()
-                            val transactionType = if (selectedTicket != null) "Tiket" else "Kantin"
-                            val itemsList = if (selectedTicket != null) {
-                                listOf("${selectedTicket!!.destination.name} x${selectedTicket!!.quantity}")
-                            } else {
-                                cartItems.map { "${it.menuItem.name} x${it.quantity}" }
-                            }
+                            cardData?.let { currentCard ->
+                                if (currentCard.balance >= paidAmount) {
+                                    val newBalance = currentCard.balance - paidAmount
+                                    appPreferences.saveCardData(cardId!!, userName!!, newBalance)
+                                    cardData = currentCard.copy(balance = newBalance) // Pastikan state diperbarui
 
-                            val newHistoryItem = PaymentHistoryItem(
-                                cardId = cardId,
-                                userName = userName,
-                                transactionType = transactionType,
-                                items = itemsList,
-                                totalPrice = paidAmount,
-                                timestamp = currentTime
-                            )
-                            appPreferences.addPaymentToHistory(newHistoryItem)
+                                    val currentTime = System.currentTimeMillis()
+                                    val transactionType = if (selectedTicket != null) "Tiket" else "Kantin"
+                                    val itemsList = if (selectedTicket != null) {
+                                        listOf("${selectedTicket!!.destination.name} x${selectedTicket!!.quantity}")
+                                    } else {
+                                        cartItems.map { "${it.menuItem.name} x${it.quantity}" }
+                                    }
 
-                            if (selectedTicket != null) {
-                                appPreferences.saveTicketItem(null)
-                                selectedTicket = null
-                            }
-                            if (cartItems.isNotEmpty()) {
-                                appPreferences.clearCartItems()
-                                cartItems = emptyList()
-                            }
+                                    val newHistoryItem = PaymentHistoryItem(
+                                        cardId = cardId,
+                                        userName = userName,
+                                        transactionType = transactionType,
+                                        items = itemsList,
+                                        totalPrice = totalPrice,
+                                        timestamp = currentTime
+                                    )
+                                    appPreferences.addPaymentToHistory(newHistoryItem)
 
-                            totalPrice = paidAmount
-                            currentScreen = "paymentSuccess"
+                                    if (selectedTicket != null) {
+                                        appPreferences.saveTicketItem(null)
+                                        selectedTicket = null
+                                    }
+                                    if (cartItems.isNotEmpty()) {
+                                        appPreferences.clearCartItems()
+                                        cartItems = emptyList()
+                                    }
+
+                                    // Pastikan state cardData sudah diperbarui sebelum navigasi
+                                    currentScreen = "paymentSuccess"
+                                } else {
+                                    Toast.makeText(this, "Saldo tidak cukup!", Toast.LENGTH_SHORT).show()
+                                }
+                            } ?: run {
+                                Toast.makeText(this, "Data kartu tidak ditemukan!", Toast.LENGTH_SHORT).show()
+                            }
+                            isNfcTapped = false // Reset setelah proses
                         },
                         onBack = { currentScreen = if (selectedTicket != null) "ticketCart" else "cart" }
                     )
@@ -245,7 +266,17 @@ class MainActivity : ComponentActivity() {
 
         if (cardId != null && userName != null) {
             appPreferences.saveUserData(cardId!!, userName!!)
-            Log.d("TMII_APP", "Saving current user data: Card ID = $cardId, Name = $userName")
+            // Periksa dan inisialisasi saldo jika belum ada
+            val savedCardData = appPreferences.getCardData(cardId!!)
+            if (savedCardData == null) {
+                // Inisialisasi saldo awal (misalnya 100000) untuk ID baru
+                appPreferences.saveCardData(cardId!!, userName!!, 100000)
+                cardData = CardData(id = cardId!!, balance = 100000)
+                Log.d("TMII_APP", "Inisialisasi baru untuk cardId: $cardId, Saldo: 100000")
+            } else {
+                cardData = savedCardData
+                Log.d("TMII_APP", "Loaded existing card data: ID = $cardId, Balance = ${cardData?.balance}")
+            }
         }
 
         when (currentScreen) {
@@ -269,14 +300,52 @@ class MainActivity : ComponentActivity() {
             }
             "payment" -> {
                 Log.d("TMII_APP", "Processing payment")
-                isNfcTapped = true
+                cardData?.let { currentCard ->
+                    if (currentCard.balance >= totalPrice) {
+                        val newBalance = currentCard.balance - totalPrice
+                        appPreferences.saveCardData(cardId!!, userName!!, newBalance)
+                        cardData = currentCard.copy(balance = newBalance) // Pastikan state diperbarui
+
+                        val currentTime = System.currentTimeMillis()
+                        val transactionType = if (selectedTicket != null) "Tiket" else "Kantin"
+                        val itemsList = if (selectedTicket != null) {
+                            listOf("${selectedTicket!!.destination.name} x${selectedTicket!!.quantity}")
+                        } else {
+                            cartItems.map { "${it.menuItem.name} x${it.quantity}" }
+                        }
+
+                        val newHistoryItem = PaymentHistoryItem(
+                            cardId = cardId,
+                            userName = userName,
+                            transactionType = transactionType,
+                            items = itemsList,
+                            totalPrice = totalPrice,
+                            timestamp = currentTime
+                        )
+                        appPreferences.addPaymentToHistory(newHistoryItem)
+
+                        if (selectedTicket != null) {
+                            appPreferences.saveTicketItem(null)
+                            selectedTicket = null
+                        }
+                        if (cartItems.isNotEmpty()) {
+                            appPreferences.clearCartItems()
+                            cartItems = emptyList()
+                        }
+
+                        // Pastikan state cardData sudah diperbarui sebelum navigasi
+                        currentScreen = "paymentSuccess"
+                    } else {
+                        Toast.makeText(this, "Saldo tidak cukup!", Toast.LENGTH_SHORT).show()
+                    }
+                } ?: run {
+                    Toast.makeText(this, "Data kartu tidak ditemukan!", Toast.LENGTH_SHORT).show()
+                }
+                isNfcTapped = false // Reset setelah proses
             }
-            // Hapus case "isiSaldo", "isiSaldoPayment", dan "isiSaldoSuccess"
             "cekSaldo" -> {
                 Log.d("TMII_APP", "Processing balance check")
-                isNfcTapped = true
-                // Simulasikan data kartu setelah NFC di-tap
-                cardData = CardData(id = cardId ?: "000000000000", balance = 20000)
+                isNfcTapped = false // Reset setelah proses
             }
         }
     }
@@ -289,7 +358,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
-        val pendingIntent = PendingIntent.getActivity(this, 0, Intent(this, javaClass).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP), PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE)
+        val pendingIntent = PendingIntent.getActivity(this, 0, Intent(this, javaClass).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP), PendingIntent.FLAG_UPDATE_CURRENT)
         val intentFilters = arrayOf(IntentFilter(NfcAdapter.ACTION_TAG_DISCOVERED))
         nfcAdapter?.enableForegroundDispatch(this, pendingIntent, intentFilters, null)
     }
@@ -301,8 +370,8 @@ class MainActivity : ComponentActivity() {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        if (NfcAdapter.ACTION_TAG_DISCOVERED == intent?.action) {
-            val tag = intent.getParcelableExtra<Tag>(NfcAdapter.EXTRA_TAG)
+        if (NfcAdapter.ACTION_TAG_DISCOVERED == intent.action) {
+            val tag: Tag? = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG)
             val tagIdBytes = tag?.id
             val cardIdHex = tagIdBytes?.toHexString() ?: "ID_unknown"
 

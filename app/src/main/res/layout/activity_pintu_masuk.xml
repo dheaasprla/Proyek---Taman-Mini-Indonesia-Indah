@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/colorBackground"
+    tools:context=".ui.screens.PintuMasukActivity">
+
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="250dp"
+        android:layout_alignParentBottom="true"
+        android:src="@drawable/ombak"
+        android:scaleType="fitXY"
+        android:contentDescription="@string/background_ombak"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:paddingHorizontal="20dp"
+        android:gravity="center_horizontal">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingTop="50dp"
+            android:paddingBottom="20dp">
+
+            <ImageButton
+                android:id="@+id/back_button_pintu_masuk"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_alignParentStart="true"
+                android:background="@drawable/rounded_back_button"
+                android:src="@drawable/ic_arrow_back_black"
+                android:contentDescription="@string/back_button"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerInParent="true"
+                android:text="@string/pintu_masuk"
+                android:textSize="22sp"
+                android:textStyle="bold"
+                android:textColor="@color/black"/>
+
+            <ImageView
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_alignParentEnd="true"
+                android:src="@drawable/tmii_logo"
+                android:contentDescription="@string/tmii_logo"/>
+        </RelativeLayout>
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="60dp"/>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center_horizontal">
+            <ImageView
+                android:layout_width="150dp"
+                android:layout_height="150dp"
+                android:src="@drawable/kartu"
+                android:contentDescription="@string/kartu_icon"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="15dp"
+                android:text="@string/silahkan_tap_kartu"
+                android:textSize="28sp"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:textColor="@color/black"
+                android:lineSpacingExtra="4sp"/>
+
+            <FrameLayout
+                android:layout_width="200dp"
+                android:layout_height="200dp"
+                android:layout_marginTop="5dp"
+                android:background="@drawable/nfc_border_background">
+                <ImageView
+                    android:layout_width="140dp"
+                    android:layout_height="140dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/nfc"
+                    android:contentDescription="@string/nfc_icon"/>
+            </FrameLayout>
+        </LinearLayout>
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"/>
+    </LinearLayout>
+</RelativeLayout>

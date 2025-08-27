@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/white"
+    tools:context=".ui.screens.PintuMasukSuksesActivity">
+
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="300dp"
+        android:layout_alignParentTop="true"
+        android:src="@drawable/awan"
+        android:scaleType="centerCrop"
+        android:contentDescription="@string/background_awan"/>
+
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="350dp"
+        android:layout_alignParentBottom="true"
+        android:layout_marginBottom="10dp"
+        android:src="@drawable/awan"
+        android:scaleType="centerCrop"
+        android:contentDescription="@string/background_awan"/>
+
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="250dp"
+        android:layout_alignParentBottom="true"
+        android:src="@drawable/ombak"
+        android:scaleType="fitXY"
+        android:contentDescription="@string/background_ombak"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:paddingHorizontal="24dp"
+        android:gravity="center_horizontal">
+
+        <ImageButton
+            android:id="@+id/back_button_pintu_sukses"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_marginTop="40dp"
+            android:layout_gravity="start"
+            android:background="@drawable/rounded_back_button_white"
+            android:src="@drawable/ic_arrow_back_black"
+            android:contentDescription="@string/back_button"/>
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"/>
+
+        <ImageView
+            android:layout_width="200dp"
+            android:layout_height="200dp"
+            android:src="@drawable/berhasil"
+            android:contentDescription="@string/sukses_icon"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="15dp"
+            android:text="SUKSES!"
+            android:textSize="36sp"
+            android:textStyle="bold"
+            android:textColor="@color/black"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="Silahkan Masuk"
+            android:textSize="22sp"
+            android:textColor="@color/black"/>
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"/>
+    </LinearLayout>
+</RelativeLayout>

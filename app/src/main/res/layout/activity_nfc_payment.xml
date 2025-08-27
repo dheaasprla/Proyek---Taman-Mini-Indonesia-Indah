@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/colorBackground"
+    tools:context=".ui.screens.NfcPaymentActivity">
+
+    <ImageView
+        android:id="@+id/background_ombak"
+        android:layout_width="match_parent"
+        android:layout_height="150dp"
+        android:layout_alignParentBottom="true"
+        android:src="@drawable/ombak"
+        android:scaleType="fitXY"
+        android:contentDescription="Background Ombak"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:gravity="center_horizontal"
+        android:paddingHorizontal="16dp"
+        android:paddingTop="16dp"
+        android:paddingBottom="16dp">
+
+        <ImageButton
+            android:id="@+id/back_button_nfc_payment"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_gravity="start"
+            android:background="@drawable/rounded_back_button"
+            android:src="@drawable/ic_arrow_back_black"
+            android:contentDescription="Tombol Kembali"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="Pembayaran"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:textColor="@color/black"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginBottom="16dp"/>
+
+        <TextView
+            android:id="@+id/total_price_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Total: Rp 0"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="@color/black"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginBottom="24dp"/>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <ImageView
+                android:id="@+id/nfc_card_image"
+                android:layout_width="100dp"
+                android:layout_height="100dp"
+                android:src="@drawable/kartu"
+                android:contentDescription="Kartu"/>
+
+            <TextView
+                android:id="@+id/nfc_instruction_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="Silahkan\nTap Kartu"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:textColor="@color/black"
+                android:lineSpacingExtra="2sp"/>
+
+            <ProgressBar
+                android:id="@+id/loading_indicator"
+                android:layout_width="60dp"
+                android:layout_height="60dp"
+                android:layout_marginTop="16dp"
+                android:indeterminate="true"
+                android:visibility="gone"/>
+
+            <TextView
+                android:id="@+id/loading_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="Memproses\nPembayaran..."
+                android:gravity="center"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textColor="@color/black"
+                android:visibility="gone"/>
+
+            <FrameLayout
+                android:id="@+id/nfc_area_frame"
+                android:layout_width="150dp"
+                android:layout_height="100dp"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/nfc_border_background">
+                <ImageView
+                    android:layout_width="80dp"
+                    android:layout_height="80dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/nfc"
+                    android:contentDescription="NFC Icon"/>
+            </FrameLayout>
+        </LinearLayout>
+    </LinearLayout>
+</RelativeLayout>

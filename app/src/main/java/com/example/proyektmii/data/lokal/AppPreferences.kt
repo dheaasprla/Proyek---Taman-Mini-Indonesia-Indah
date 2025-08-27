@@ -8,6 +8,7 @@ import com.example.proyektmii.data.PaymentHistoryItem
 import com.example.proyektmii.data.TicketItem
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import kotlin.collections.emptyList
 
 class AppPreferences(context: Context) {
     private val preferences: SharedPreferences = context.getSharedPreferences("tmii_app_prefs", Context.MODE_PRIVATE)
@@ -30,10 +31,9 @@ class AppPreferences(context: Context) {
 
     fun saveCardData(cardId: String, name: String, balance: Int) {
         val editor = preferences.edit()
-        val cardData = CardData(cardId, balance)
+        val cardData = CardData(cardId, balance, name)
         val json = gson.toJson(cardData)
         editor.putString("${KEY_CARD_DATA_PREFIX}$cardId", json)
-        editor.putString("${KEY_USER_NAME}_$cardId", name)
         editor.apply()
     }
 
@@ -58,6 +58,7 @@ class AppPreferences(context: Context) {
     }
 
     fun getUserCardId(): String? = preferences.getString(KEY_USER_CARD_ID, null)
+
     fun getUserName(): String? = preferences.getString(KEY_USER_NAME, null)
 
     fun addPaymentToHistory(item: PaymentHistoryItem) {

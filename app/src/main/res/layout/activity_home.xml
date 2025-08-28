@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/rootHome"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/colorBackground"
+    android:padding="8dp">
+
+    <!-- Header image (pangkas tinggi supaya tidak menutup seluruh layar EDC) -->
+    <ImageView
+        android:id="@+id/imgHeader"
+        android:layout_width="match_parent"
+        android:layout_height="160dp"
+        android:scaleType="centerCrop"
+        android:src="@drawable/tmii" />
+
+    <!-- Title / logo row -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp"
+        android:gravity="center_vertical">
+
+        <ImageView
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:src="@drawable/tmii_logo"
+            android:contentDescription="@string/app_name" />
+
+        <TextView
+            android:id="@+id/footerTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="Taman Mini Indonesia Indah"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:padding="12dp"
+            android:textColor="@android:color/black"/>
+    </LinearLayout>
+
+    <!-- Grid menu: RecyclerView mengisi sisa layar -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvFeatures"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:clipToPadding="false"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp"/>
+
+    <!-- Footer (mis. gradient / kotak merah pada screenshot) -->
+    <View
+        android:id="@+id/footerBox"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:layout_marginTop="8dp"
+        android:background="@color/colorPrimary" />
+
+</LinearLayout>

@@ -1,8 +1,10 @@
 plugins {
-    alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
-    alias(libs.plugins.kotlin.compose)
+    id("com.android.application")
+    id("org.jetbrains.kotlin.android")
+    id("kotlin-kapt")
 }
+
+apply(plugin = "kotlin-parcelize") // gunakan ini untuk Parcelize
 
 android {
     namespace = "com.example.proyektmii"
@@ -10,11 +12,13 @@ android {
 
     defaultConfig {
         applicationId = "com.example.proyektmii"
-        minSdk = 24
-        targetSdk = 35
+        minSdk = 19           // tetap 19 sesuai pilihanmu
+        targetSdk = 22
+
         versionCode = 1
         versionName = "1.0"
 
+        multiDexEnabled = true
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -27,6 +31,7 @@ android {
             )
         }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
@@ -34,40 +39,43 @@ android {
     kotlinOptions {
         jvmTarget = "11"
     }
+
+    // Non-Compose project: jangan aktifkan compose
     buildFeatures {
-        compose = true
+        // compose = false // default false, hanya dokumentasi
     }
 }
 
 dependencies {
+    // Core
+    implementation("androidx.core:core-ktx:1.10.1")
 
-    implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.lifecycle.runtime.ktx)
-    implementation(libs.androidx.activity.compose)
-    implementation(platform(libs.androidx.compose.bom))
-    implementation(libs.androidx.ui)
-    implementation(libs.androidx.ui.graphics)
-    implementation(libs.androidx.ui.tooling.preview)
-    implementation(libs.androidx.material3)
-    testImplementation(libs.junit)
-    androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
-    androidTestImplementation(platform(libs.androidx.compose.bom))
-    androidTestImplementation(libs.androidx.ui.test.junit4)
-    debugImplementation(libs.androidx.ui.tooling)
-    debugImplementation(libs.androidx.ui.test.manifest)
+    // AppCompat (pilih versi lama yang kompatibel dengan minSdk 19)
+    implementation("androidx.appcompat:appcompat:1.4.2")
 
-    implementation("androidx.compose.animation:animation:1.7.0")
-    implementation("androidx.core:core-ktx:1.13.1")
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.0")
-    implementation("androidx.activity:activity-compose:1.9.0")
-    implementation(platform("androidx.compose:compose-bom:2024.04.01"))
-    implementation("androidx.compose.ui:ui")
+    // RecyclerView / CardView
+    implementation("androidx.recyclerview:recyclerview:1.2.1")
+    implementation("androidx.cardview:cardview:1.0.0")
+
+    // Lifecycle (non-compose)
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.6.2")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.2")
+
+    // Gson
     implementation("com.google.code.gson:gson:2.8.9")
-    implementation("androidx.compose.material:material")
-    implementation("androidx.compose.ui:ui-tooling-preview")
-    debugImplementation("androidx.compose.ui:ui-tooling")
-    debugImplementation("androidx.compose.ui:ui-test-manifest")
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.0")
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.0")
+
+    // Multidex
+    implementation("androidx.multidex:multidex:2.0.1")
+
+    // CloudPOS SDK (lokal AAR)
+    implementation(files("libs/cloudpossdkV1.7.5.1_Standard.aar"))
+
+    // Billing (opsional, gunakan versi stabil)
+    implementation("com.android.billingclient:billing:5.1.0")
+
+    implementation ("com.github.bumptech.glide:glide:4.15.1")
+    // Testing
+    testImplementation("junit:junit:4.13.2")
+    androidTestImplementation("androidx.test.ext:junit:1.1.5")
+    androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
 }

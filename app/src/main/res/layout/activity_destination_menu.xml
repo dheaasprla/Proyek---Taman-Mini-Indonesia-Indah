@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:background="@color/colorBackground"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingHorizontal="20dp">
+
+    <!-- Header -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingTop="50dp"
+        android:paddingBottom="20dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+        <ImageButton
+            android:id="@+id/btnBack"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="@drawable/circle_bg_white"
+            android:src="@drawable/ic_arrow_back"
+            android:contentDescription="@string/back" />
+        <TextView
+            android:layout_weight="1"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="@string/destinasi"
+            android:textSize="22sp"
+            android:textStyle="bold" />
+        <Space android:layout_width="40dp" android:layout_height="wrap_content" />
+    </LinearLayout>
+
+    <Space android:layout_height="60dp" android:layout_width="match_parent"/>
+
+    <include layout="@layout/item_destination_card" android:id="@+id/cardMuseum" />
+    <Space android:layout_height="20dp" android:layout_width="match_parent"/>
+    <include layout="@layout/item_destination_card" android:id="@+id/cardWahana" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+
+    <!-- Ombak di bawah -->
+    <ImageView
+        android:id="@+id/ivOmbak"
+        android:layout_width="match_parent"
+        android:layout_height="250dp"
+        android:src="@drawable/ombak"
+        android:scaleType="centerCrop"
+        android:contentDescription="@string/bg_ombak" />
+</LinearLayout>

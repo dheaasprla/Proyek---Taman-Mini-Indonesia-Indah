@@ -28,9 +28,10 @@ class AppPreferences(context: Context) {
     fun isFirstRun(): Boolean = preferences.getBoolean(KEY_FIRST_RUN, true)
     fun setFirstRun(value: Boolean) = preferences.edit().putBoolean(KEY_FIRST_RUN, value).apply()
 
-    fun saveCardData(cardId: String, name: String, balance: Int) {
+    // Ubah parameter balance dari Int ke Long
+    fun saveCardData(cardId: String, name: String, balance: Long) {
         val editor = preferences.edit()
-        val cardData = CardData(cardId, balance)
+        val cardData = CardData(cardId, balance.toInt())
         val json = gson.toJson(cardData)
         editor.putString("${KEY_CARD_DATA_PREFIX}$cardId", json)
         editor.putString("${KEY_USER_NAME}_$cardId", name)

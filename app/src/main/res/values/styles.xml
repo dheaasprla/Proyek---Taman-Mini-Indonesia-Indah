@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Application theme (AppCompat parent) -->
+    <style name="Theme.ProyekTMII" parent="Theme.AppCompat.Light.NoActionBar">
+        <!-- Colors -->
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
+
+        <!-- Window and text -->
+        <item name="android:windowBackground">@color/colorBackground</item>
+        <item name="android:textColor">@color/colorOnBackground</item>
+
+        <!-- AppCompat compatibility -->
+        <item name="windowNoTitle">true</item>
+        <item name="windowActionBar">false</item>
+    </style>
+
+    <!-- If you need a dark variant or dialog theme, add here -->
+    <style name="Theme.ProyekTMII.Dialog" parent="Theme.AppCompat.Light.Dialog.Alert">
+        <item name="colorAccent">@color/colorAccent</item>
+    </style>
+</resources>

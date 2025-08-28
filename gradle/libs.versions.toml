@@ -13,6 +13,10 @@ firebaseDatabaseKtx = "22.0.0"
 navigationCommonAndroid = "2.9.3"
 navigationCommonJvmstubs = "2.9.3"
 runtimeLivedata = "1.8.3"
+cardview = "1.0.0"
+recyclerview = "1.4.0"
+appcompat = "1.7.1"
+billing = "1.1.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -34,9 +38,13 @@ firebase-database-ktx = { group = "com.google.firebase", name = "firebase-databa
 androidx-navigation-common-android = { group = "androidx.navigation", name = "navigation-common-android", version.ref = "navigationCommonAndroid" }
 androidx-navigation-common-jvmstubs = { group = "androidx.navigation", name = "navigation-common-jvmstubs", version.ref = "navigationCommonJvmstubs" }
 androidx-runtime-livedata = { group = "androidx.compose.runtime", name = "runtime-livedata", version.ref = "runtimeLivedata" }
+androidx-cardview = { group = "androidx.cardview", name = "cardview", version.ref = "cardview" }
+androidx-recyclerview = { group = "androidx.recyclerview", name = "recyclerview", version.ref = "recyclerview" }
+androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
+billing = { group = "com.google.androidbrowserhelper", name = "billing", version.ref = "billing" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
-
+kotlin-parcelize = { id = "org.jetbrains.kotlin.plugin.parcelize", version = "1.9.22" }

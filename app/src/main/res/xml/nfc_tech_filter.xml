@@ -1,9 +1,39 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+
+    <!-- Filter 1: ISO-DEP (contoh e-KTP, kartu EMV) -->
     <tech-list>
         <tech>android.nfc.tech.IsoDep</tech>
     </tech-list>
+
+    <!-- Filter 2: NFC-A (contoh Mifare Ultralight, e-money, Flazz) -->
     <tech-list>
         <tech>android.nfc.tech.NfcA</tech>
     </tech-list>
+
+    <!-- Filter 3: NFC-B (beberapa kartu transport) -->
+    <tech-list>
+        <tech>android.nfc.tech.NfcB</tech>
+    </tech-list>
+
+    <!-- Filter 4: NFC-F (FeliCa, kartu Jepang) -->
+    <tech-list>
+        <tech>android.nfc.tech.NfcF</tech>
+    </tech-list>
+
+    <!-- Filter 5: NFC-V (ISO 15693, kartu jarak jauh) -->
+    <tech-list>
+        <tech>android.nfc.tech.NfcV</tech>
+    </tech-list>
+
+    <!-- Filter 6: Mifare Classic -->
+    <tech-list>
+        <tech>android.nfc.tech.MifareClassic</tech>
+    </tech-list>
+
+    <!-- Filter 7: Mifare Ultralight -->
+    <tech-list>
+        <tech>android.nfc.tech.MifareUltralight</tech>
+    </tech-list>
+
 </resources>

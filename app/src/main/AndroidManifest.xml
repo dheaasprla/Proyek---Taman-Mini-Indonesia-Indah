@@ -2,11 +2,25 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <!-- NFC permission -->
     <uses-permission android:name="android.permission.NFC" />
-
     <uses-feature
         android:name="android.hardware.nfc"
         android:required="true" />
+
+    <!-- Network & connectivity -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+    <!-- Bluetooth (jika printer/perangkat lain butuh) -->
+    <uses-permission android:name="android.permission.BLUETOOTH" />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+
+    <!-- Storage (WRITE/READ jika diperlukan) -->
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+
+    <!-- Kamera (jika SDK/device butuh scanner) -->
+    <uses-permission android:name="android.permission.CAMERA" />
 
     <application
         android:allowBackup="true"
@@ -17,17 +31,63 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.ProyekTMII"
-        tools:targetApi="31">
+        android:hardwareAccelerated="true"
+        android:usesCleartextTraffic="true"
+        tools:targetApi="35">
+
+        <!-- Activity utama -->
         <activity
-            android:name=".MainActivity"
+            android:name=".ui.screens.HomeActivity"
             android:exported="true"
+            android:launchMode="singleTop"
             android:label="@string/app_name"
-            android:theme="@style/Theme.ProyekTMII">
+            android:theme="@style/Theme.ProyekTMII"
+            android:screenOrientation="portrait">
+
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity>
-    </application>
 
+            <!-- NFC teknik discovery (opsional, kalau mau activity auto-launch saat tag ditempel) -->
+            <intent-filter>
+                <action android:name="android.nfc.action.TECH_DISCOVERED" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+            <meta-data
+                android:name="android.nfc.action.TECH_DISCOVERED"
+                android:resource="@xml/nfc_tech_filter" />
+        </activity>
+
+        <!-- UI screens (XML-based Activities & yang kita buat) -->
+        <activity
+            android:name=".ui.screens.CanteenActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.screens.CartActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.screens.PaymentActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.screens.PaymentSuccessActivity"
+            android:exported="false" />
+
+        <activity android:name=".ui.screens.DestinationMenuActivity" />
+        <activity android:name=".ui.screens.DestinationSelectionActivity" />
+        <activity android:name=".ui.screens.TicketCartActivity" />
+        <activity android:name=".ui.screens.PintuMasukActivity" />
+        <activity android:name=".ui.screens.PintuMasukSuccessActivity" />
+        <activity android:name=".ui.screens.ParkingCheckinActivity" />
+        <activity android:name=".ui.screens.ParkingCheckinSuccessActivity" />
+        <activity android:name=".ui.screens.ParkingCheckoutActivity" />
+        <activity android:name=".ui.screens.ParkingCheckoutSuccessActivity" />
+        <activity android:name=".ui.screens.CheckBalanceActivity" />
+
+        <!-- Jika CloudPOS SDK butuh service/AIDL, daftarkan di sini sesuai dokumentasi SDK -->
+        <!-- <service android:name=".MyService" android:exported="false" /> -->
+    </application>
 </manifest>

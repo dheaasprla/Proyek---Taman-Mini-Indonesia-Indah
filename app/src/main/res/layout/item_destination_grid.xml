@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:card="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="220dp"
+    android:layout_margin="8dp"
+    card:cardCornerRadius="12dp"
+    card:cardElevation="4dp">
+
+    <LinearLayout
+        android:padding="12dp"
+        android:gravity="center_horizontal"
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <ImageView
+            android:id="@+id/imgDest"
+            android:layout_width="match_parent"
+            android:layout_height="110dp"
+            android:scaleType="centerCrop"
+            android:src="@drawable/museum"
+            android:contentDescription="@string/feature_icon" />
+
+        <TextView
+            android:id="@+id/tvDestName"
+            android:layout_marginTop="8dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Nama"
+            android:textSize="11sp"
+            android:textStyle="bold"/>
+
+        <TextView
+            android:id="@+id/tvDestPrice"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Tiket: Rp 0"
+            android:textSize="10sp"
+            android:textColor="@android:color/darker_gray"/>
+
+        <LinearLayout
+            android:id="@+id/qtyContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:visibility="gone"
+            android:layout_marginTop="6dp"
+            android:background="@drawable/rounded_light_bg"
+            android:padding="6dp">
+
+            <Button
+                android:id="@+id/btnDec"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:text="−"/>
+            <TextView
+                android:id="@+id/tvQty"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:paddingLeft="12dp"
+                android:paddingRight="12dp"
+                android:gravity="center"
+                android:text="1"/>
+            <Button
+                android:id="@+id/btnInc"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:text="+" />
+        </LinearLayout>
+    </LinearLayout>
+</androidx.cardview.widget.CardView>

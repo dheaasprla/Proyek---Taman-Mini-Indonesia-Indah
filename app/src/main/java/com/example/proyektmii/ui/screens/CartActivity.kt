@@ -1,21 +1,20 @@
-// app/src/main/java/com/example/proyektmii/ui/screens/CartActivity.kt
 package com.example.proyektmii.ui.screens
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.BaseAdapter
 import android.widget.Button
 import android.widget.ImageButton
-import android.widget.ImageView
 import android.widget.ListView
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.proyektmii.R
 import com.example.proyektmii.data.CartItem
-import com.example.proyektmii.data.MenuItem
 import com.example.proyektmii.data.local.AppPreferences
 import java.text.NumberFormat
 import java.util.Locale
@@ -25,11 +24,13 @@ class CartActivity : AppCompatActivity() {
     private lateinit var appPreferences: AppPreferences
     private lateinit var cartListView: ListView
     private lateinit var totalItemText: TextView
+    private lateinit var totalPriceItems: TextView // Menggunakan ID yang benar
     private lateinit var totalPaymentText: TextView
     private lateinit var lanjutBayarButton: Button
     private lateinit var backButton: ImageButton
 
     private var cartItems = listOf<CartItem>()
+    private val TAG = "CartActivity"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -37,21 +38,35 @@ class CartActivity : AppCompatActivity() {
 
         appPreferences = AppPreferences(this)
 
-        cartListView = findViewById(R.id.cart_list_view)
-        totalItemText = findViewById(R.id.total_item_text)
-        totalPaymentText = findViewById(R.id.total_payment_text)
-        lanjutBayarButton = findViewById(R.id.lanjut_bayar_button)
-        backButton = findViewById(R.id.back_button_cart)
+        try {
+            cartListView = findViewById(R.id.cart_list_view)
+            totalItemText = findViewById(R.id.total_item_text)
+            totalPriceItems = findViewById(R.id.total_price_items) // Menggunakan ID yang benar
+            totalPaymentText = findViewById(R.id.total_payment_text)
+            lanjutBayarButton = findViewById(R.id.lanjut_bayar_button)
+            backButton = findViewById(R.id.back_button_cart)
 
-        backButton.setOnClickListener { onBackPressed() }
+            backButton.setOnClickListener { onBackPressed() }
 
-        lanjutBayarButton.setOnClickListener {
-            val totalPrice = cartItems.sumOf { it.menuItem.price * it.quantity }
-            val intent = Intent(this, PaymentActivity::class.java)
-            intent.putExtra("totalPrice", totalPrice)
-            startActivity(intent)
+            lanjutBayarButton.setOnClickListener {
+                val totalPrice = cartItems.sumOf { it.menuItem.price * it.quantity }
+                if (totalPrice > 0) {
+                    val intent = Intent(this, PaymentActivity::class.java)
+                    intent.putExtra("totalPrice", totalPrice)
+                    startActivity(intent)
+                } else {
+                    Toast.makeText(this, "Keranjang kosong!", Toast.LENGTH_SHORT).show()
+                }
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error initializing views", e)
+            Toast.makeText(this, "Aplikasi mengalami masalah. Silakan coba lagi.", Toast.LENGTH_LONG).show()
+            finish()
         }
+    }
 
+    override fun onResume() {
+        super.onResume()
         loadCartItems()
     }
 
@@ -60,25 +75,20 @@ class CartActivity : AppCompatActivity() {
         if (cartItems.isNotEmpty()) {
             val adapter = CartListAdapter(cartItems)
             cartListView.adapter = adapter
+        } else {
+            cartListView.adapter = null
         }
         updateSummary()
-    }
-
-    private fun getImageResource(menuName: String): Int {
-        return when (menuName) {
-            "Nasi Goreng" -> R.drawable.nasgor
-            "Mie Ayam" -> R.drawable.mieayam
-            "Es Jeruk" -> R.drawable.esjeruk
-            "Teh manis" -> R.drawable.esteh
-            else -> R.drawable.nasgor
-        }
     }
 
     private fun updateSummary() {
         val totalItems = cartItems.sumOf { it.quantity }
         val totalPrice = cartItems.sumOf { it.menuItem.price * it.quantity }
+
         totalItemText.text = "Total Item (${totalItems})"
+        totalPriceItems.text = "Rp ${NumberFormat.getNumberInstance(Locale("in", "ID")).format(totalPrice)}"
         totalPaymentText.text = "Rp ${NumberFormat.getNumberInstance(Locale("in", "ID")).format(totalPrice)}"
+
         lanjutBayarButton.isEnabled = totalItems > 0
     }
 
@@ -88,43 +98,38 @@ class CartActivity : AppCompatActivity() {
         override fun getItemId(position: Int): Long = position.toLong()
 
         override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {
-            // Perbaikan: Panggil LayoutInflater dengan cara yang spesifik
             val view = convertView ?: LayoutInflater.from(parent?.context)
                 .inflate(R.layout.list_item_cart, parent, false)
 
             val item = items[position]
 
-            // Perbaikan: Ganti nama ID agar sesuai dengan list_item_cart.xml
-            val imageView: ImageView = view.findViewById(R.id.cart_item_image)
             val nameTextView: TextView = view.findViewById(R.id.cart_item_name)
             val priceTextView: TextView = view.findViewById(R.id.cart_item_price)
             val minusButton: Button = view.findViewById(R.id.minus_button)
             val plusButton: Button = view.findViewById(R.id.plus_button)
             val quantityTextView: TextView = view.findViewById(R.id.quantity_text)
 
-            imageView.setImageResource(getImageResource(item.menuItem.name))
             nameTextView.text = item.menuItem.name
             priceTextView.text = "Rp ${NumberFormat.getNumberInstance(Locale("in", "ID")).format(item.menuItem.price)}"
             quantityTextView.text = item.quantity.toString()
 
             minusButton.setOnClickListener {
-                if (item.quantity > 1) {
-                    val newItems = items.map { if (it == item) it.copy(quantity = it.quantity - 1) else it }
-                    cartItems = newItems
+                val newQuantity = item.quantity - 1
+                val updatedItems = if (newQuantity > 0) {
+                    items.map { if (it == item) it.copy(quantity = newQuantity) else it }
                 } else {
-                    cartItems = items.filter { it != item }
+                    items.filter { it != item }
                 }
-                appPreferences.saveCartItems(cartItems)
-                loadCartItems()
+                appPreferences.saveCartItems(updatedItems)
+                this@CartActivity.loadCartItems()
             }
 
             plusButton.setOnClickListener {
-                val newItems = items.map { if (it == item) it.copy(quantity = it.quantity + 1) else it }
-                cartItems = newItems
-                appPreferences.saveCartItems(cartItems)
-                loadCartItems()
+                val newQuantity = item.quantity + 1
+                val updatedItems = items.map { if (it == item) it.copy(quantity = newQuantity) else it }
+                appPreferences.saveCartItems(updatedItems)
+                this@CartActivity.loadCartItems()
             }
-
             return view
         }
     }

@@ -7,7 +7,6 @@
     android:background="@color/colorBackground"
     tools:context=".ui.screens.TicketPaymentActivity">
 
-    <!-- Background Ombak di bawah -->
     <ImageView
         android:id="@+id/background_ombak"
         android:layout_width="match_parent"
@@ -68,13 +67,13 @@
                 android:layout_height="wrap_content"
                 android:orientation="horizontal">
                 <TextView
+                    android:id="@+id/total_ticket_text"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="Total Tiket (0)"
                     android:textSize="12sp"
-                    android:textColor="@color/black"
-                    android:id="@+id/total_ticket_text"/>
+                    android:textColor="@color/black"/>
                 <TextView
                     android:id="@+id/total_price_per_item"
                     android:layout_width="wrap_content"
@@ -100,7 +99,7 @@
                 <TextView
                     android:id="@+id/total_payment_text"
                     android:layout_width="wrap_content"
-                    android_layout_height="wrap_content"
+                    android:layout_height="wrap_content"
                     android:text="Rp 0"
                     android:textSize="14sp"
                     android:textStyle="bold"

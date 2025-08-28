@@ -2,6 +2,7 @@ package com.example.proyektmii.ui.screens
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -9,9 +10,9 @@ import android.widget.BaseAdapter
 import android.widget.Button
 import android.widget.GridView
 import android.widget.ImageButton
-import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.proyektmii.R
 import com.example.proyektmii.data.Destination
@@ -30,57 +31,64 @@ class DestinationSelectionActivity : AppCompatActivity() {
 
     private var selectedTicket: TicketItem? = null
     private var isWahana: Boolean = false
+    private val TAG = "DestinationSelection"
+    private lateinit var destinationAdapter: DestinationGridAdapter
+
+    private val wahanaDestinations = listOf(
+        Destination("Kereta Gantung", 50000, null),
+        Destination("Jagat Satwa Nusantara", 60000, null),
+        Destination("Teater Keong Emas", 50000, null),
+        Destination("Skyworld Indonesia", 90000, null),
+        Destination("Desa Seni Ganara Art", 25000, null)
+    )
+
+    private val museumDestinations = listOf(
+        Destination("Contemporary Art Gallery", 25000, null),
+        Destination("Bayt Al-Qur'an & Museum Istiqlal", 10000, null),
+        Destination("Museum Prangko", 5000, null),
+        Destination("Museum Keprajuritan", 5000, null),
+        Destination("Museum Transportasi", 10000, null),
+        Destination("Museum Listrik & Energi Baru", 20000, null),
+        Destination("Indonesia Science Center - PPIPTEK", 27500, null)
+    )
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_destination_selection)
+        Log.d(TAG, "onCreate: DestinationSelectionActivity started.")
 
         appPreferences = AppPreferences(this)
-
         destinationGrid = findViewById(R.id.destination_grid)
         continueButton = findViewById(R.id.lanjut_ke_keranjang_button)
         backButton = findViewById(R.id.back_button_destinasi_selection)
         titleTextView = findViewById(R.id.destination_selection_title)
 
         isWahana = intent.getBooleanExtra("isWahana", false)
-        val destinations = if (isWahana) {
-            listOf(
-                Destination("Kereta Gantung", 50000, R.drawable.keretagantung),
-                Destination("Jagat Satwa Nusantara", 60000, R.drawable.jagat),
-                Destination("Teater Keong Emas", 50000, R.drawable.keong),
-                Destination("Skyworld Indonesia", 90000, R.drawable.sky),
-                Destination("Desa Seni Ganara Art", 25000, R.drawable.ganara)
-            )
-        } else {
-            listOf(
-                Destination("Contemporary Art Gallery", 25000, R.drawable.cag),
-                Destination("Bayt Al-Qur'an & Museum Istiqlal", 10000, R.drawable.istiqlal),
-                Destination("Museum Prangko", 5000, R.drawable.prangko),
-                Destination("Museum Keprajuritan", 5000, R.drawable.kepra),
-                Destination("Museum Transportasi", 10000, R.drawable.transportasi),
-                Destination("Museum Listrik & Energi Baru", 20000, R.drawable.le),
-                Destination("Indonesia Science Center - PPIPTEK", 27500, R.drawable.science)
-            )
-        }
+        val destinations = if (isWahana) wahanaDestinations else museumDestinations
 
         titleTextView.text = if (isWahana) "Wahana & Rekreasi" else "Museum"
 
-        selectedTicket = appPreferences.getTicketItem()
-
-        val adapter = DestinationGridAdapter(destinations)
-        destinationGrid.adapter = adapter
+        destinationAdapter = DestinationGridAdapter(destinations)
+        destinationGrid.adapter = destinationAdapter
 
         continueButton.setOnClickListener {
-            selectedTicket?.let { ticket ->
-                appPreferences.saveTicketItem(ticket)
+            if (selectedTicket != null) {
+                appPreferences.saveTicketItem(selectedTicket!!)
                 val intent = Intent(this, TicketPaymentActivity::class.java)
                 startActivity(intent)
+            } else {
+                Toast.makeText(this, "Silakan pilih tiket terlebih dahulu.", Toast.LENGTH_SHORT).show()
             }
         }
 
         backButton.setOnClickListener { onBackPressed() }
+    }
 
+    override fun onResume() {
+        super.onResume()
+        selectedTicket = appPreferences.getTicketItem()
         updateContinueButtonState()
+        destinationAdapter.notifyDataSetChanged()
     }
 
     private fun updateContinueButtonState() {
@@ -98,7 +106,6 @@ class DestinationSelectionActivity : AppCompatActivity() {
 
             val destination = destinations[position]
 
-            val imageView: ImageView = view.findViewById(R.id.destination_image)
             val nameTextView: TextView = view.findViewById(R.id.destination_name)
             val priceTextView: TextView = view.findViewById(R.id.destination_price)
             val addButton: Button = view.findViewById(R.id.add_button)
@@ -107,11 +114,12 @@ class DestinationSelectionActivity : AppCompatActivity() {
             val plusButton: Button = view.findViewById(R.id.plus_button)
             val quantityTextView: TextView = view.findViewById(R.id.quantity_text)
 
-            imageView.setImageResource(destination.imageRes ?: R.drawable.museum)
             nameTextView.text = destination.name
             priceTextView.text = "Tiket: Rp ${NumberFormat.getNumberInstance(Locale("in", "ID")).format(destination.price)}"
 
-            val currentQuantity = selectedTicket.takeIf { it?.destination == destination }?.quantity ?: 0
+            val isSelected = selectedTicket?.destination?.name == destination.name
+            val currentQuantity = if (isSelected) selectedTicket?.quantity ?: 0 else 0
+
             if (currentQuantity > 0) {
                 addButton.visibility = View.GONE
                 quantityLayout.visibility = View.VISIBLE
@@ -122,26 +130,27 @@ class DestinationSelectionActivity : AppCompatActivity() {
             }
 
             addButton.setOnClickListener {
-                selectedTicket = TicketItem(destination, 1)
-                updateContinueButtonState()
-                notifyDataSetChanged()
+                onTicketUpdate(TicketItem(destination, 1))
             }
             minusButton.setOnClickListener {
-                if (selectedTicket != null && selectedTicket!!.quantity > 1) {
-                    selectedTicket = selectedTicket?.copy(quantity = selectedTicket!!.quantity - 1)
+                if (currentQuantity > 1) {
+                    onTicketUpdate(selectedTicket?.copy(quantity = currentQuantity - 1))
                 } else {
-                    selectedTicket = null
+                    onTicketUpdate(null)
                 }
-                updateContinueButtonState()
-                notifyDataSetChanged()
             }
             plusButton.setOnClickListener {
-                selectedTicket = selectedTicket?.copy(quantity = selectedTicket!!.quantity + 1)
-                updateContinueButtonState()
-                notifyDataSetChanged()
+                onTicketUpdate(selectedTicket?.copy(quantity = currentQuantity + 1) ?: TicketItem(destination, 1))
             }
 
             return view
+        }
+
+        private fun onTicketUpdate(newTicket: TicketItem?) {
+            this@DestinationSelectionActivity.selectedTicket = newTicket
+            this@DestinationSelectionActivity.updateContinueButtonState()
+            this.notifyDataSetChanged()
+            appPreferences.saveTicketItem(newTicket)
         }
     }
 }

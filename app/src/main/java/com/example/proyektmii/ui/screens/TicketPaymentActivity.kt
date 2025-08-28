@@ -2,6 +2,7 @@ package com.example.proyektmii.ui.screens
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -11,6 +12,7 @@ import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.ListView
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.proyektmii.R
 import com.example.proyektmii.data.TicketItem
@@ -29,6 +31,7 @@ class TicketPaymentActivity : AppCompatActivity() {
 
     private var ticketItem: TicketItem? = null
     private var totalPrice: Int = 0
+    private val TAG = "TicketPaymentActivity"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -36,20 +39,34 @@ class TicketPaymentActivity : AppCompatActivity() {
 
         appPreferences = AppPreferences(this)
 
-        ticketListView = findViewById(R.id.ticket_list_view)
-        totalTicketText = findViewById(R.id.total_ticket_text)
-        totalPaymentText = findViewById(R.id.total_payment_text)
-        payButton = findViewById(R.id.lanjut_bayar_button)
-        backButton = findViewById(R.id.back_button_ticket_cart)
+        try {
+            // Perbaikan: Pastikan semua findViewById sudah benar dan mengacu ke layout
+            ticketListView = findViewById(R.id.ticket_list_view)
+            totalTicketText = findViewById(R.id.total_ticket_text)
+            totalPaymentText = findViewById(R.id.total_payment_text)
+            payButton = findViewById(R.id.lanjut_bayar_button)
+            backButton = findViewById(R.id.back_button_ticket_cart)
 
-        backButton.setOnClickListener { onBackPressed() }
+            backButton.setOnClickListener { onBackPressed() }
 
-        payButton.setOnClickListener {
-            val intent = Intent(this, PaymentActivity::class.java)
-            intent.putExtra("totalPrice", totalPrice)
-            startActivity(intent)
+            payButton.setOnClickListener {
+                if (ticketItem != null && totalPrice > 0) {
+                    val intent = Intent(this, PaymentActivity::class.java)
+                    intent.putExtra("totalPrice", totalPrice)
+                    startActivity(intent)
+                } else {
+                    Toast.makeText(this, "Belum ada tiket yang dipilih.", Toast.LENGTH_SHORT).show()
+                }
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error initializing views", e)
+            Toast.makeText(this, "Aplikasi mengalami masalah. Silakan coba lagi.", Toast.LENGTH_LONG).show()
+            finish()
         }
+    }
 
+    override fun onResume() {
+        super.onResume()
         loadTicketData()
     }
 
@@ -70,6 +87,9 @@ class TicketPaymentActivity : AppCompatActivity() {
             payButton.isEnabled = true
         } ?: run {
             totalPrice = 0
+            val emptyList = emptyList<TicketItem>()
+            val adapter = TicketListAdapter(emptyList)
+            ticketListView.adapter = adapter
             totalTicketText.text = "Total Tiket (0)"
             totalPaymentText.text = "Rp 0"
             payButton.isEnabled = false
@@ -87,34 +107,31 @@ class TicketPaymentActivity : AppCompatActivity() {
 
             val item = items[position]
 
-            val imageView = view.findViewById<ImageView>(R.id.ticket_image)
+            // Perbaikan: Hapus referensi ke ImageView karena sudah dihapus dari XML
+            // val imageView = view.findViewById<ImageView>(R.id.ticket_image)
             val nameTextView = view.findViewById<TextView>(R.id.ticket_name)
             val priceTextView = view.findViewById<TextView>(R.id.ticket_price_per_item)
             val minusButton = view.findViewById<Button>(R.id.minus_button)
             val plusButton = view.findViewById<Button>(R.id.plus_button)
             val quantityTextView = view.findViewById<TextView>(R.id.quantity_text)
 
-            imageView.setImageResource(item.destination.imageRes ?: R.drawable.museum)
+            // imageView.setImageResource(item.destination.imageRes ?: R.drawable.museum)
             nameTextView.text = item.destination.name
             priceTextView.text = "Rp ${NumberFormat.getNumberInstance(Locale("in", "ID")).format(item.destination.price)}"
             quantityTextView.text = item.quantity.toString()
 
             minusButton.setOnClickListener {
-                if (item.quantity > 1) {
-                    val newQuantity = item.quantity - 1
-                    appPreferences.saveTicketItem(item.copy(quantity = newQuantity))
-                } else {
-                    appPreferences.saveTicketItem(null)
-                }
-                loadTicketData()
+                val newQuantity = item.quantity - 1
+                val updatedItem = if (newQuantity > 0) item.copy(quantity = newQuantity) else null
+                appPreferences.saveTicketItem(updatedItem)
+                this@TicketPaymentActivity.loadTicketData()
             }
 
             plusButton.setOnClickListener {
                 val newQuantity = item.quantity + 1
                 appPreferences.saveTicketItem(item.copy(quantity = newQuantity))
-                loadTicketData()
+                this@TicketPaymentActivity.loadTicketData()
             }
-
             return view
         }
     }

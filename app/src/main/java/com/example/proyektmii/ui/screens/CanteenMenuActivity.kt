@@ -2,6 +2,7 @@ package com.example.proyektmii.ui.screens
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -9,9 +10,9 @@ import android.widget.BaseAdapter
 import android.widget.Button
 import android.widget.GridView
 import android.widget.ImageButton
-import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.cardview.widget.CardView
 import com.example.proyektmii.R
@@ -29,8 +30,10 @@ class CanteenMenuActivity : AppCompatActivity() {
     private lateinit var totalSummaryText: TextView
     private lateinit var payButton: Button
     private lateinit var backButton: ImageButton
+    private lateinit var menuAdapter: MenuItemGridAdapter
 
-    private var cartItems = listOf<CartItem>()
+    private var cartItems = mutableListOf<CartItem>()
+    private val TAG = "CanteenMenuActivity"
 
     private val menuItems = listOf(
         MenuItem("Nasi Goreng", 20000, R.drawable.nasgor),
@@ -42,12 +45,14 @@ class CanteenMenuActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_canteen_menu)
+        Log.d(TAG, "onCreate: CanteenMenuActivity started.")
 
         appPreferences = AppPreferences(this)
 
         try {
             menuGrid = findViewById(R.id.menu_grid)
             cartSummaryCard = findViewById(R.id.cart_summary_card)
+            // Menggunakan ID yang benar dari activity_canteen_menu.xml
             totalSummaryText = findViewById(R.id.total_summary_text)
             payButton = findViewById(R.id.pay_button)
             backButton = findViewById(R.id.back_button_canteen)
@@ -57,18 +62,17 @@ class CanteenMenuActivity : AppCompatActivity() {
             }
 
             payButton.setOnClickListener {
-                val totalPrice = cartItems.sumOf { it.menuItem.price * it.quantity }
-                val intent = Intent(this, CartActivity::class.java)
-                intent.putExtra("totalPrice", totalPrice)
-                startActivity(intent)
+                if (cartItems.isNotEmpty()) {
+                    val intent = Intent(this, CartActivity::class.java)
+                    startActivity(intent)
+                } else {
+                    Toast.makeText(this, "Keranjang Anda kosong!", Toast.LENGTH_SHORT).show()
+                }
             }
-
-            loadCartItems()
         } catch (e: Exception) {
-            e.printStackTrace()
-            // Tampilkan pesan kesalahan jika ada masalah
-            // Ini bisa membantu Anda mengetahui letak masalahnya
-            // di logcat saat crash terjadi.
+            Log.e(TAG, "Error initializing views", e)
+            Toast.makeText(this, "Aplikasi mengalami masalah. Silakan coba lagi.", Toast.LENGTH_LONG).show()
+            finish()
         }
     }
 
@@ -78,9 +82,9 @@ class CanteenMenuActivity : AppCompatActivity() {
     }
 
     private fun loadCartItems() {
-        cartItems = appPreferences.getCartItems()
-        val adapter = MenuItemGridAdapter(menuItems)
-        menuGrid.adapter = adapter
+        cartItems = appPreferences.getCartItems().toMutableList()
+        menuAdapter = MenuItemGridAdapter(menuItems)
+        menuGrid.adapter = menuAdapter
         updateCartSummary()
     }
 
@@ -90,8 +94,10 @@ class CanteenMenuActivity : AppCompatActivity() {
         if (totalItems > 0) {
             cartSummaryCard.visibility = View.VISIBLE
             totalSummaryText.text = "(${totalItems} item) Rp ${NumberFormat.getNumberInstance(Locale("in", "ID")).format(totalPrice)}"
+            payButton.isEnabled = true
         } else {
             cartSummaryCard.visibility = View.GONE
+            payButton.isEnabled = false
         }
     }
 
@@ -106,7 +112,6 @@ class CanteenMenuActivity : AppCompatActivity() {
 
             val menuItem = menuItems[position]
 
-            val imageView: ImageView = view.findViewById(R.id.menu_item_image)
             val nameTextView: TextView = view.findViewById(R.id.menu_item_name)
             val priceTextView: TextView = view.findViewById(R.id.menu_item_price)
             val addButton: Button = view.findViewById(R.id.add_button)
@@ -115,7 +120,6 @@ class CanteenMenuActivity : AppCompatActivity() {
             val plusButton: Button = view.findViewById(R.id.plus_button)
             val quantityTextView: TextView = view.findViewById(R.id.quantity_text)
 
-            imageView.setImageResource(menuItem.imageRes ?: R.drawable.nasgor)
             nameTextView.text = menuItem.name
             priceTextView.text = "Rp ${NumberFormat.getNumberInstance(Locale("in", "ID")).format(menuItem.price)}"
 
@@ -132,35 +136,43 @@ class CanteenMenuActivity : AppCompatActivity() {
             }
 
             addButton.setOnClickListener {
-                val updatedCart = if (existingCartItem != null) {
-                    cartItems.map { if (it.menuItem.name == menuItem.name) it.copy(quantity = it.quantity + 1) else it }
+                val updatedCart = cartItems.toMutableList()
+                val existingItem = updatedCart.find { it.menuItem.name == menuItem.name }
+                if (existingItem != null) {
+                    val index = updatedCart.indexOf(existingItem)
+                    updatedCart[index] = existingItem.copy(quantity = existingItem.quantity + 1)
                 } else {
-                    cartItems + CartItem(menuItem, 1)
+                    updatedCart.add(CartItem(menuItem, 1))
                 }
-                cartItems = updatedCart
-                appPreferences.saveCartItems(cartItems)
-                updateCartSummary()
-                notifyDataSetChanged()
+                appPreferences.saveCartItems(updatedCart)
+                this@CanteenMenuActivity.loadCartItems()
             }
             minusButton.setOnClickListener {
-                if (currentQuantity > 1) {
-                    val updatedCart = cartItems.map { if (it.menuItem.name == menuItem.name) it.copy(quantity = it.quantity - 1) else it }
-                    cartItems = updatedCart
-                } else {
-                    cartItems = cartItems.filter { it.menuItem.name != menuItem.name }
+                val updatedCart = cartItems.toMutableList()
+                val itemToRemove = updatedCart.find { it.menuItem.name == menuItem.name }
+                if (itemToRemove != null) {
+                    if (itemToRemove.quantity > 1) {
+                        val index = updatedCart.indexOf(itemToRemove)
+                        updatedCart[index] = itemToRemove.copy(quantity = itemToRemove.quantity - 1)
+                    } else {
+                        updatedCart.remove(itemToRemove)
+                    }
                 }
-                appPreferences.saveCartItems(cartItems)
-                updateCartSummary()
-                notifyDataSetChanged()
+                appPreferences.saveCartItems(updatedCart)
+                this@CanteenMenuActivity.loadCartItems()
             }
             plusButton.setOnClickListener {
-                val updatedCart = cartItems.map { if (it.menuItem.name == menuItem.name) it.copy(quantity = it.quantity + 1) else it }
-                cartItems = updatedCart
-                appPreferences.saveCartItems(cartItems)
-                updateCartSummary()
-                notifyDataSetChanged()
+                val updatedCart = cartItems.toMutableList()
+                val itemToUpdate = updatedCart.find { it.menuItem.name == menuItem.name }
+                if (itemToUpdate != null) {
+                    val index = updatedCart.indexOf(itemToUpdate)
+                    updatedCart[index] = itemToUpdate.copy(quantity = itemToUpdate.quantity + 1)
+                } else {
+                    updatedCart.add(CartItem(menuItem, 1))
+                }
+                appPreferences.saveCartItems(updatedCart)
+                this@CanteenMenuActivity.loadCartItems()
             }
-
             return view
         }
     }

@@ -2,8 +2,15 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <uses-permission android:name="android.permission.NFC" />
-    <uses-feature android:name="android.hardware.nfc" android:required="false" />
+    <!-- Kalau device kamu CloudPOS, tidak perlu pakai NFC permission bawaan Android -->
+    <!-- <uses-permission android:name="android.permission.NFC" /> -->
+    <!-- <uses-feature android:name="android.hardware.nfc" android:required="false" /> -->
+
+    <!-- Permission umum -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.NFC"/>
 
     <application
         android:name="androidx.multidex.MultiDexApplication"
@@ -22,13 +29,9 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-            <intent-filter>
-                <action android:name="android.nfc.action.TAG_DISCOVERED" />
-                <category android:name="android.intent.category.DEFAULT" />
-            </intent-filter>
-            <meta-data android:name="android.nfc.action.TECH_DISCOVERED" android:resource="@xml/nfc_tech_filter" />
         </activity>
 
+        <!-- Semua activity kamu -->
         <activity android:name=".ui.screens.CanteenMenuActivity" android:exported="true" />
         <activity android:name=".ui.screens.CartActivity" android:exported="true" />
         <activity android:name=".ui.screens.CheckBalanceActivity" android:exported="true" />
@@ -42,8 +45,9 @@
         <activity android:name=".ui.screens.PaymentActivity" android:exported="true" />
         <activity android:name=".ui.screens.PaymentSuccessActivity" android:exported="true" />
         <activity android:name=".ui.screens.PintuMasukSuksesActivity" android:exported="true" />
-        <activity android:name=".ui.screens.TicketPaymentActivity" android:exported="true" />
         <activity android:name=".ui.screens.OnboardingActivity" android:exported="true" />
+        <activity android:name=".ui.screens.NfcPaymentActivity" android:exported="true" />
+        <activity android:name=".ui.screens.TicketPaymentActivity" android:exported="true" />
 
     </application>
 </manifest>

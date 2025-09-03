@@ -1,75 +1,84 @@
 package com.example.proyektmii.ui.screens
 
-import android.app.PendingIntent
-import android.content.Intent
-import android.content.IntentFilter
-import android.nfc.NfcAdapter
-import android.nfc.Tag
 import android.os.Bundle
+import android.widget.Button
 import android.widget.ImageButton
-import android.widget.Toast
+import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-import com.example.proyektmii.MainActivity
+import com.cloudpos.jniinterface.SmartCardInterface
+import com.cloudpos.jniinterface.SmartCardSlotInfo
 import com.example.proyektmii.R
-import com.example.proyektmii.data.local.AppPreferences
 
 class ParkingCheckinActivity : AppCompatActivity() {
 
-    private lateinit var appPreferences: AppPreferences
-    private var nfcAdapter: NfcAdapter? = null
+    private lateinit var statusTextView: TextView
+    private lateinit var backButton: ImageButton
+    private lateinit var checkinButton: Button
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_parking_checkin)
 
-        appPreferences = AppPreferences(this)
-        nfcAdapter = NfcAdapter.getDefaultAdapter(this)
+        statusTextView = findViewById(R.id.status_textview)
+        backButton = findViewById(R.id.back_button_parking_checkin)
+        checkinButton = findViewById(R.id.checkin_button)
 
-        findViewById<ImageButton>(R.id.back_button_parking_checkin).setOnClickListener {
-            onBackPressed()
-        }
+        backButton.setOnClickListener { onBackPressed() }
+        checkinButton.setOnClickListener { performCheckin() }
     }
 
-    override fun onResume() {
-        super.onResume()
-        val pendingIntent = PendingIntent.getActivity(this, 0, Intent(this, javaClass).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP), PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE)
-        val intentFilters = arrayOf(IntentFilter(NfcAdapter.ACTION_TAG_DISCOVERED))
-        nfcAdapter?.enableForegroundDispatch(this, pendingIntent, intentFilters, null)
-    }
+    private fun performCheckin() {
+        val slot = SmartCardInterface.DEFAULT_SLOT
 
-    override fun onPause() {
-        super.onPause()
-        nfcAdapter?.disableForegroundDispatch(this)
-    }
+        statusTextView.text = "Memeriksa kartu..."
 
-    override fun onNewIntent(intent: Intent) {
-        super.onNewIntent(intent)
-        if (NfcAdapter.ACTION_TAG_DISCOVERED == intent.action) {
-            val tag: Tag? = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG)
-            val tagIdBytes = tag?.id
-            // Gunakan fungsi toHexString() manual yang dibuat di bawah
-            val cardId = tagIdBytes?.toHexString() ?: "ID_unknown"
+        Thread {
+            try {
+                val openResult = SmartCardInterface.open(slot)
+                if (openResult != 0) {
+                    runOnUiThread { statusTextView.text = "Gagal membuka koneksi ke reader. (Kode: $openResult)" }
+                    return@Thread
+                }
 
-            val parkingEntryTime = appPreferences.getParkingEntryTime()
-            if (parkingEntryTime == 0L) {
-                // Check-in parkir
-                appPreferences.saveParkingEntryTime(System.currentTimeMillis())
-                Toast.makeText(this, "Check-in parkir berhasil!", Toast.LENGTH_SHORT).show()
+                val powerOnResult = SmartCardInterface.powerOn(slot, ByteArray(64), SmartCardSlotInfo())
+                if (powerOnResult != 0) {
+                    runOnUiThread { statusTextView.text = "Gagal menyalakan kartu. (Kode: $powerOnResult)" }
+                    return@Thread
+                }
 
-                // Navigasi ke layar sukses check-in
-                val successIntent = Intent(this, ParkingCheckinSuccessActivity::class.java)
-                startActivity(successIntent)
-                finish()
-            } else {
-                Toast.makeText(this, "Kartu ini sudah terdaftar di area parkir.", Toast.LENGTH_SHORT).show()
-                // Pindah ke layar checkout jika kartu sudah terdaftar
-                val checkoutIntent = Intent(this, ParkingCheckoutActivity::class.java)
-                startActivity(checkoutIntent)
-                finish()
+                val apdu = hexStringToByteArray("FFCA000000")
+                val response = ByteArray(256)
+
+                val transmitResult = SmartCardInterface.transmit(slot, apdu, response)
+
+                if (transmitResult >= 0) {
+                    runOnUiThread { statusTextView.text = "Check-in berhasil!" }
+                } else {
+                    runOnUiThread { statusTextView.text = "Gagal membaca kartu. (Kode: $transmitResult)" }
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                runOnUiThread { statusTextView.text = "Terjadi kesalahan transaksi: ${e.message}" }
+                SmartCardInterface.notifyCancel()
+            } finally {
+                try {
+                    SmartCardInterface.powerOff(slot)
+                    SmartCardInterface.close(slot)
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
             }
-        }
+        }.start()
     }
 
-    // Tambahkan fungsi toHexString() manual di sini
-    private fun ByteArray.toHexString(): String = joinToString("") { "%02x".format(it) }
+    private fun hexStringToByteArray(s: String): ByteArray {
+        val len = s.length
+        val data = ByteArray(len / 2)
+        var i = 0
+        while (i < len) {
+            data[i / 2] = ((Character.digit(s[i], 16) shl 4) + Character.digit(s[i + 1], 16)).toByte()
+            i += 2
+        }
+        return data
+    }
 }

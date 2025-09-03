@@ -11,14 +11,17 @@ pluginManagement {
         gradlePluginPortal()
     }
 }
+
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
         google()
         mavenCentral()
+        flatDir {
+            dirs("app/libs") // <--- tambahkan ini biar .aar di libs kebaca
+        }
     }
 }
 
 rootProject.name = "ProyekTMII"
 include(":app")
- 

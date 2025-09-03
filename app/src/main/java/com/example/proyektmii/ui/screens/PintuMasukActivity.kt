@@ -1,85 +1,111 @@
 package com.example.proyektmii.ui.screens
 
-import android.app.PendingIntent
 import android.content.Intent
-import android.content.IntentFilter
-import android.nfc.NfcAdapter
-import android.nfc.Tag
 import android.os.Bundle
 import android.widget.ImageButton
-import android.widget.Toast
+import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import com.cloudpos.jniinterface.SmartCardInterface
+import com.cloudpos.jniinterface.SmartCardSlotInfo
 import com.example.proyektmii.R
-import com.example.proyektmii.data.PaymentHistoryItem
-import com.example.proyektmii.data.local.AppPreferences
 import java.text.NumberFormat
 import java.util.Locale
 
 class PintuMasukActivity : AppCompatActivity() {
-    private lateinit var appPreferences: AppPreferences
-    private var nfcAdapter: NfcAdapter? = null
 
-    private val HARGA_TIKET_MASUK = 25000
+    private lateinit var statusTextView: TextView
+    private lateinit var backButton: ImageButton
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_pintu_masuk)
 
-        appPreferences = AppPreferences(this)
-        nfcAdapter = NfcAdapter.getDefaultAdapter(this)
+        statusTextView = findViewById(R.id.status_textview)
+        backButton = findViewById(R.id.back_button_pintu_masuk)
 
-        findViewById<ImageButton>(R.id.back_button_pintu_masuk).setOnClickListener {
-            onBackPressed()
-        }
+        backButton.setOnClickListener { onBackPressed() }
+
+        // Memulai proses tap kartu di thread terpisah
+        startCardWaitingProcess()
     }
 
-    override fun onResume() {
-        super.onResume()
-        val pendingIntent = PendingIntent.getActivity(this, 0, Intent(this, javaClass).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP), PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE)
-        val intentFilters = arrayOf(IntentFilter(NfcAdapter.ACTION_TAG_DISCOVERED))
-        nfcAdapter?.enableForegroundDispatch(this, pendingIntent, intentFilters, null)
+    private fun startCardWaitingProcess() {
+        runOnUiThread { statusTextView.text = "Silahkan Tap Kartu" }
+        val slot = SmartCardInterface.DEFAULT_SLOT
+
+        Thread {
+            try {
+                // Perbaikan: Logika yang benar adalah menunggu kartu terdeteksi terlebih dahulu.
+                // Metode ini akan memblokir thread sampai kartu ditempel.
+                SmartCardInterface.waitForCardPresent(slot)
+
+                runOnUiThread { statusTextView.text = "Kartu terdeteksi. Membuka koneksi..." }
+
+                // Lanjutkan ke transaksi NFC.
+                performNfcTransaction(slot)
+
+            } catch (e: Exception) {
+                e.printStackTrace()
+                runOnUiThread {
+                    statusTextView.text = "Proses gagal. Silahkan coba lagi."
+                }
+            }
+        }.start()
     }
 
-    override fun onPause() {
-        super.onPause()
-        nfcAdapter?.disableForegroundDispatch(this)
-    }
+    private fun performNfcTransaction(slot: Int) {
+        try {
+            // Setelah kartu terdeteksi, baru coba buka koneksi ke SmartCard reader.
+            val openResult = SmartCardInterface.open(slot)
+            if (openResult != 0) {
+                runOnUiThread { statusTextView.text = "Gagal membuka koneksi ke reader. (Kode: $openResult)" }
+                return
+            }
 
-    override fun onNewIntent(intent: Intent) {
-        super.onNewIntent(intent)
-        if (NfcAdapter.ACTION_TAG_DISCOVERED == intent.action) {
-            val tag: Tag? = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG)
-            val tagIdBytes = tag?.id
-            val cardId = tagIdBytes?.toHexString() ?: "ID_unknown"
+            val powerOnResult = SmartCardInterface.powerOn(slot, ByteArray(64), SmartCardSlotInfo())
+            if (powerOnResult != 0) {
+                runOnUiThread { statusTextView.text = "Gagal menyalakan kartu. (Kode: $powerOnResult)" }
+                return
+            }
 
-            val cardData = appPreferences.getCardData(cardId)
+            runOnUiThread { statusTextView.text = "Kartu siap. Membaca data..." }
 
-            if (cardData != null) {
-                if (cardData.balance >= HARGA_TIKET_MASUK) {
-                    val newBalance = cardData.balance - HARGA_TIKET_MASUK
-                    appPreferences.saveCardData(cardId, cardData.userName ?: "Default User", newBalance)
+            val apdu = hexStringToByteArray("FFCA000000")
+            val response = ByteArray(256)
 
-                    val newHistoryItem = PaymentHistoryItem(
-                        cardId = cardId,
-                        userName = cardData.userName,
-                        transactionType = "Tiket Masuk",
-                        items = listOf("Tiket Masuk TMII"),
-                        totalPrice = HARGA_TIKET_MASUK,
-                        timestamp = System.currentTimeMillis()
-                    )
-                    appPreferences.addPaymentToHistory(newHistoryItem)
+            val transmitResult = SmartCardInterface.transmit(slot, apdu, response)
 
-                    Toast.makeText(this, "Pembayaran berhasil!\nSaldo tersisa: Rp ${NumberFormat.getNumberInstance(Locale("in", "ID")).format(newBalance)}", Toast.LENGTH_LONG).show()
-                    val successIntent = Intent(this, PintuMasukSuksesActivity::class.java)
-                    startActivity(successIntent)
-                } else {
-                    Toast.makeText(this, "Saldo tidak cukup!", Toast.LENGTH_SHORT).show()
+            if (transmitResult >= 0) {
+                runOnUiThread {
+                    statusTextView.text = "Transaksi berhasil!"
+                    val intent = Intent(this@PintuMasukActivity, PintuMasukSuksesActivity::class.java)
+                    startActivity(intent)
+                    finish()
                 }
             } else {
-                Toast.makeText(this, "Data kartu tidak ditemukan. Silahkan lakukan top up atau beli kartu baru.", Toast.LENGTH_SHORT).show()
+                runOnUiThread { statusTextView.text = "Tiket tidak valid. (Kode: $transmitResult)" }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            runOnUiThread { statusTextView.text = "Terjadi kesalahan transaksi: ${e.message}" }
+        } finally {
+            try {
+                SmartCardInterface.powerOff(slot)
+                SmartCardInterface.close(slot)
+            } catch (e: Exception) {
+                // Biarkan saja jika ada error saat menutup koneksi
             }
         }
     }
 
-    private fun ByteArray.toHexString(): String = joinToString("") { "%02x".format(it) }
+    private fun hexStringToByteArray(s: String): ByteArray {
+        val len = s.length
+        val data = ByteArray(len / 2)
+        var i = 0
+        while (i < len) {
+            data[i / 2] = ((Character.digit(s[i], 16) shl 4) + Character.digit(s[i + 1], 16)).toByte()
+            i += 2
+        }
+        return data
+    }
 }

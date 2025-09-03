@@ -109,7 +109,7 @@
             <TextView
                 android:id="@+id/total_price_text"
                 android:layout_width="wrap_content"
-                android_layout_height="wrap_content"
+                android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
                 android:text="@string/default_total_price"
                 android:textSize="16sp"
@@ -123,6 +123,25 @@
             android:orientation="vertical"
             android:gravity="center_horizontal">
 
+            <TextView
+                android:id="@+id/status_textview"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="Memeriksa Kartu..."
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:textColor="@color/black"
+                android:lineSpacingExtra="2sp"/>
+
+            <Button
+                android:id="@+id/checkout_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Checkout"
+                android:layout_marginTop="16dp"/>
+
             <ImageView
                 android:id="@+id/nfc_card_image"
                 android:layout_width="80dp"
@@ -133,7 +152,7 @@
             <TextView
                 android:id="@+id/nfc_instruction_text"
                 android:layout_width="wrap_content"
-                android_layout_height="wrap_content"
+                android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
                 android:text="Silahkan\nTap Kartu"
                 android:textSize="16sp"

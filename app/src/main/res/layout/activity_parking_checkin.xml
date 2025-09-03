@@ -64,14 +64,22 @@
                 android:src="@drawable/mobil"
                 android:contentDescription="@string/mobil_icon"/>
             <TextView
+                android:id="@+id/status_textview"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                android:text="@string/parkir"
+                android:text="Status Check-in"
                 android:textSize="18sp"
                 android:textStyle="bold"
                 android:textColor="@color/black"/>
         </LinearLayout>
+
+        <Button
+            android:id="@+id/checkin_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Check-in"
+            android:layout_marginTop="16dp"/>
 
         <Space
             android:layout_width="match_parent"

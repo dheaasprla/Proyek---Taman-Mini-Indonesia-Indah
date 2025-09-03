@@ -1,7 +1,7 @@
 package com.example.proyektmii
 
-import android.content.Intent
 import android.os.Bundle
+import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import androidx.cardview.widget.CardView
 import com.example.proyektmii.ui.screens.*

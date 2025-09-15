@@ -11,25 +11,29 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        findViewById<CardView>(R.id.card_pintu_masuk).setOnClickListener {
-            startActivity(Intent(this, PintuMasukActivity::class.java))
-        }
+        // Initialize card views
+        try {
+            findViewById<CardView>(R.id.card_pintu_masuk).setOnClickListener {
+                startActivity(Intent(this, PintuMasukActivity::class.java))
+            }
 
-        findViewById<CardView>(R.id.card_parkir).setOnClickListener {
-            // gunakan ParkingActivity final
-            startActivity(Intent(this, ParkingActivity::class.java))
-        }
+            findViewById<CardView>(R.id.card_parkir).setOnClickListener {
+                startActivity(Intent(this, ParkingActivity::class.java))
+            }
 
-        findViewById<CardView>(R.id.card_destinasi).setOnClickListener {
-            startActivity(Intent(this, DestinationMenuActivity::class.java))
-        }
+            findViewById<CardView>(R.id.card_destinasi).setOnClickListener {
+                startActivity(Intent(this, DestinationMenuActivity::class.java))
+            }
 
-        findViewById<CardView>(R.id.card_kantin).setOnClickListener {
-            startActivity(Intent(this, CanteenMenuActivity::class.java))
-        }
+            findViewById<CardView>(R.id.card_kantin).setOnClickListener {
+                startActivity(Intent(this, CanteenMenuActivity::class.java))
+            }
 
-        findViewById<CardView>(R.id.card_ceksaldo).setOnClickListener {
-            startActivity(Intent(this, CheckBalanceActivity::class.java))
+            findViewById<CardView>(R.id.card_ceksaldo).setOnClickListener {
+                startActivity(Intent(this, CheckBalanceActivity::class.java))
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
     }
 }

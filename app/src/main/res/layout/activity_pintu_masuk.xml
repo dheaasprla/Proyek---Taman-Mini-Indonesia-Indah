@@ -22,6 +22,7 @@
         android:paddingHorizontal="20dp"
         android:gravity="center_horizontal">
 
+        <!-- Header -->
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -54,6 +55,7 @@
                 android:contentDescription="@string/tmii_logo"/>
         </RelativeLayout>
 
+        <!-- Status Judul -->
         <TextView
             android:id="@+id/status_textview"
             android:layout_width="wrap_content"
@@ -68,11 +70,13 @@
             android:layout_width="match_parent"
             android:layout_height="60dp"/>
 
+        <!-- NFC Card Area -->
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:gravity="center_horizontal">
+
             <ImageView
                 android:layout_width="150dp"
                 android:layout_height="150dp"
@@ -96,6 +100,7 @@
                 android:layout_height="200dp"
                 android:layout_marginTop="5dp"
                 android:background="@drawable/nfc_border_background">
+
                 <ImageView
                     android:layout_width="140dp"
                     android:layout_height="140dp"
@@ -103,6 +108,36 @@
                     android:src="@drawable/nfc"
                     android:contentDescription="@string/nfc_icon"/>
             </FrameLayout>
+
+            <!-- Hasil NFC -->
+            <TextView
+                android:id="@+id/tvResult"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:text="Menunggu kartu..."
+                android:textSize="16sp"
+                android:textStyle="italic"
+                android:textColor="@color/black"
+                android:gravity="center"/>
+
+            <TextView
+                android:id="@+id/text_status"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Tempelkan kartu Anda"
+                android:layout_centerInParent="true"
+                android:textSize="18sp"
+                android:textColor="@color/black"/>
+
+            <Button
+                android:id="@+id/retry_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:text="Coba Lagi"
+                android:enabled="false"/>
+
         </LinearLayout>
 
         <Space

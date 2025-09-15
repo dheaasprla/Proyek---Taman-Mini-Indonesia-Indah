@@ -1,36 +1,60 @@
 package com.example.proyektmii.ui.screens
 
-import android.content.Intent
 import android.os.Bundle
 import android.widget.ImageButton
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-import com.example.proyektmii.MainActivity
 import com.example.proyektmii.R
-import java.text.NumberFormat
-import java.util.Locale
+import com.example.proyektmii.data.local.AppPreferences
+import java.text.SimpleDateFormat
+import java.util.*
 
 class ParkingCheckoutSuccessActivity : AppCompatActivity() {
+
+    private lateinit var uidTextView: TextView
+    private lateinit var exitTimeText: TextView
+    private lateinit var feeText: TextView
+    private lateinit var balanceText: TextView
+    private lateinit var backButton: ImageButton
+    private lateinit var prefs: AppPreferences
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_parking_checkout_success)
 
-        val totalPrice = intent.getIntExtra("totalPrice", 0)
-        val newBalance = intent.getIntExtra("newBalance", 0)
+        prefs = AppPreferences(this)
 
-        val totalPriceTextView = findViewById<TextView>(R.id.total_price_text)
-        val saldoTersisaTextView = findViewById<TextView>(R.id.saldo_tersisa_text)
-        val backButton = findViewById<ImageButton>(R.id.back_button_parking_success)
+        uidTextView = findViewById(R.id.uid_textview)
+        exitTimeText = findViewById(R.id.exit_time_text)
+        feeText = findViewById(R.id.fee_text)
+        balanceText = findViewById(R.id.balance_text)
+        backButton = findViewById(R.id.back_button)
 
-        totalPriceTextView.text = "Total: Rp ${NumberFormat.getNumberInstance(Locale("in", "ID")).format(totalPrice)}"
-        saldoTersisaTextView.text = "Saldo Tersisa: Rp ${NumberFormat.getNumberInstance(Locale("in", "ID")).format(newBalance)}"
+        // Ambil data dari Intent
+        val uid = intent.getStringExtra("uid") ?: "-"
+        val entryTime = intent.getLongExtra("entryTime", 0L)
+        val exitTime = intent.getLongExtra("exitTime", 0L)
+        val cost = intent.getIntExtra("cost", 0)
 
-        backButton.setOnClickListener {
-            val intent = Intent(this, MainActivity::class.java)
-            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
-            startActivity(intent)
-            finish()
-        }
+        // Ambil saldo dari SharedPreferences
+        val cardData = prefs.getCardData(uid)
+        var balance = cardData?.balance ?: 0
+        val name = cardData?.name ?: "Pengunjung"
+
+        balance -= cost
+        prefs.saveCardData(uid, name, balance)
+
+        // Format jam
+        val formatter = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale("in", "ID"))
+        val entryStr = if (entryTime > 0) formatter.format(Date(entryTime)) else "-"
+        val exitStr = if (exitTime > 0) formatter.format(Date(exitTime)) else "-"
+
+        // Tampilkan data
+        uidTextView.text = "UID: $uid"
+        exitTimeText.text = "Masuk: $entryStr\nKeluar: $exitStr"
+        feeText.text = "Biaya Parkir: Rp $cost"
+        balanceText.text = "Sisa Saldo: Rp $balance"
+
+        backButton.setOnClickListener { finish() }
     }
 }

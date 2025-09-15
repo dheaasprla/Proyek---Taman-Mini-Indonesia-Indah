@@ -9,7 +9,6 @@ import android.view.ViewGroup
 import android.widget.BaseAdapter
 import android.widget.Button
 import android.widget.ImageButton
-import android.widget.ImageView
 import android.widget.ListView
 import android.widget.TextView
 import android.widget.Toast
@@ -40,7 +39,6 @@ class TicketPaymentActivity : AppCompatActivity() {
         appPreferences = AppPreferences(this)
 
         try {
-            // Perbaikan: Pastikan semua findViewById sudah benar dan mengacu ke layout
             ticketListView = findViewById(R.id.ticket_list_view)
             totalTicketText = findViewById(R.id.total_ticket_text)
             totalPaymentText = findViewById(R.id.total_payment_text)
@@ -52,7 +50,7 @@ class TicketPaymentActivity : AppCompatActivity() {
             payButton.setOnClickListener {
                 if (ticketItem != null && totalPrice > 0) {
                     val intent = Intent(this, PaymentActivity::class.java)
-                    intent.putExtra("totalPrice", totalPrice)
+                    intent.putExtra("totalPrice", totalPrice.toLong())
                     startActivity(intent)
                 } else {
                     Toast.makeText(this, "Belum ada tiket yang dipilih.", Toast.LENGTH_SHORT).show()
@@ -107,15 +105,12 @@ class TicketPaymentActivity : AppCompatActivity() {
 
             val item = items[position]
 
-            // Perbaikan: Hapus referensi ke ImageView karena sudah dihapus dari XML
-            // val imageView = view.findViewById<ImageView>(R.id.ticket_image)
             val nameTextView = view.findViewById<TextView>(R.id.ticket_name)
             val priceTextView = view.findViewById<TextView>(R.id.ticket_price_per_item)
             val minusButton = view.findViewById<Button>(R.id.minus_button)
             val plusButton = view.findViewById<Button>(R.id.plus_button)
             val quantityTextView = view.findViewById<TextView>(R.id.quantity_text)
 
-            // imageView.setImageResource(item.destination.imageRes ?: R.drawable.museum)
             nameTextView.text = item.destination.name
             priceTextView.text = "Rp ${NumberFormat.getNumberInstance(Locale("in", "ID")).format(item.destination.price)}"
             quantityTextView.text = item.quantity.toString()

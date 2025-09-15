@@ -26,11 +26,10 @@ class CanteenMenuActivity : AppCompatActivity() {
 
     private lateinit var appPreferences: AppPreferences
     private lateinit var menuGrid: GridView
-    private lateinit var cartSummaryCard: CardView
-    private lateinit var totalSummaryText: TextView
-    private lateinit var payButton: Button
+    private var cartSummaryCard: CardView? = null
+    private var totalSummaryText: TextView? = null
+    private var payButton: Button? = null
     private lateinit var backButton: ImageButton
-    private lateinit var menuAdapter: MenuItemGridAdapter
 
     private var cartItems = mutableListOf<CartItem>()
     private val TAG = "CanteenMenuActivity"
@@ -52,7 +51,6 @@ class CanteenMenuActivity : AppCompatActivity() {
         try {
             menuGrid = findViewById(R.id.menu_grid)
             cartSummaryCard = findViewById(R.id.cart_summary_card)
-            // Menggunakan ID yang benar dari activity_canteen_menu.xml
             totalSummaryText = findViewById(R.id.total_summary_text)
             payButton = findViewById(R.id.pay_button)
             backButton = findViewById(R.id.back_button_canteen)
@@ -61,7 +59,7 @@ class CanteenMenuActivity : AppCompatActivity() {
                 onBackPressed()
             }
 
-            payButton.setOnClickListener {
+            payButton?.setOnClickListener {
                 if (cartItems.isNotEmpty()) {
                     val intent = Intent(this, CartActivity::class.java)
                     startActivity(intent)
@@ -83,7 +81,8 @@ class CanteenMenuActivity : AppCompatActivity() {
 
     private fun loadCartItems() {
         cartItems = appPreferences.getCartItems().toMutableList()
-        menuAdapter = MenuItemGridAdapter(menuItems)
+        // Pindahkan inisialisasi adapter ke sini
+        val menuAdapter = MenuItemGridAdapter(menuItems)
         menuGrid.adapter = menuAdapter
         updateCartSummary()
     }
@@ -92,12 +91,12 @@ class CanteenMenuActivity : AppCompatActivity() {
         val totalItems = cartItems.sumOf { it.quantity }
         val totalPrice = cartItems.sumOf { it.menuItem.price * it.quantity }
         if (totalItems > 0) {
-            cartSummaryCard.visibility = View.VISIBLE
-            totalSummaryText.text = "(${totalItems} item) Rp ${NumberFormat.getNumberInstance(Locale("in", "ID")).format(totalPrice)}"
-            payButton.isEnabled = true
+            cartSummaryCard?.visibility = View.VISIBLE
+            totalSummaryText?.text = "(${totalItems} item) Rp ${NumberFormat.getNumberInstance(Locale("in", "ID")).format(totalPrice)}"
+            payButton?.isEnabled = true
         } else {
-            cartSummaryCard.visibility = View.GONE
-            payButton.isEnabled = false
+            cartSummaryCard?.visibility = View.GONE
+            payButton?.isEnabled = false
         }
     }
 

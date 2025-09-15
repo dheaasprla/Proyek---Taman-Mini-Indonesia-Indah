@@ -6,30 +6,23 @@
     android:background="@color/white"
     tools:context=".ui.screens.PintuMasukSuksesActivity">
 
+    <!-- Background atas -->
     <ImageView
         android:layout_width="match_parent"
         android:layout_height="300dp"
         android:layout_alignParentTop="true"
         android:src="@drawable/awan"
         android:scaleType="centerCrop"
-        android:contentDescription="@string/background_awan"/>
+        android:contentDescription="@string/background_awan" />
 
-    <ImageView
-        android:layout_width="match_parent"
-        android:layout_height="350dp"
-        android:layout_alignParentBottom="true"
-        android:layout_marginBottom="10dp"
-        android:src="@drawable/awan"
-        android:scaleType="centerCrop"
-        android:contentDescription="@string/background_awan"/>
-
+    <!-- Background bawah -->
     <ImageView
         android:layout_width="match_parent"
         android:layout_height="250dp"
         android:layout_alignParentBottom="true"
         android:src="@drawable/ombak"
         android:scaleType="fitXY"
-        android:contentDescription="@string/background_ombak"/>
+        android:contentDescription="@string/background_ombak" />
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -38,6 +31,7 @@
         android:paddingHorizontal="24dp"
         android:gravity="center_horizontal">
 
+        <!-- Tombol back -->
         <ImageButton
             android:id="@+id/back_button_pintu_sukses"
             android:layout_width="40dp"
@@ -53,12 +47,14 @@
             android:layout_height="0dp"
             android:layout_weight="1"/>
 
+        <!-- Icon sukses -->
         <ImageView
             android:layout_width="200dp"
             android:layout_height="200dp"
             android:src="@drawable/berhasil"
             android:contentDescription="@string/sukses_icon"/>
 
+        <!-- Teks sukses -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -75,6 +71,15 @@
             android:text="Silahkan Masuk"
             android:textSize="22sp"
             android:textColor="@color/black"/>
+
+        <TextView
+            android:id="@+id/uid_textview"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="UID Kartu: -"
+            android:textSize="18sp"
+            android:textColor="@color/black"
+            android:layout_marginTop="20dp"/>
 
         <Space
             android:layout_width="match_parent"

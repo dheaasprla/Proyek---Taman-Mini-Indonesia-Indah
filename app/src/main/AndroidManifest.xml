@@ -1,16 +1,39 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools">
-
-    <!-- Kalau device kamu CloudPOS, tidak perlu pakai NFC permission bawaan Android -->
-    <!-- <uses-permission android:name="android.permission.NFC" /> -->
-    <!-- <uses-feature android:name="android.hardware.nfc" android:required="false" /> -->
+    xmlns:tools="http://schemas.android.com/tools"
+    package="com.example.proyektmii">
 
     <!-- Permission umum -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
+
+    <!-- Permission untuk CloudPOS (EDC Wizar/EDS) -->
+    <uses-permission android:name="android.permission.CLOUDPOS_PRINTER" />
+    <uses-permission android:name="android.permission.CLOUDPOS_SMARTCARD" />
+    <uses-permission android:name="android.permission.CLOUDPOS_MSR" />
+    <uses-permission android:name="android.permission.CLOUDPOS_CONTACTLESS_CARD" />
+    <uses-permission android:name="android.permission.CLOUDPOS_SERIAL" />
+    <uses-permission android:name="android.permission.CLOUDPOS_LED" />
+    <uses-permission android:name="android.permission.CLOUDPOS_FINGERPRINT" />
+    <uses-permission android:name="android.permission.CLOUDPOS_DISABLE_HOME_KEY_IN_ACTIVITY" />
+    <uses-permission android:name="android.permission.CLOUDPOS_DEFAULT_LAUNCHER" />
+    <uses-permission android:name="android.permission.CLOUDPOS_PIN_GET_PIN_BLOCK" />
+    <uses-permission android:name="android.permission.CLOUDPOS_PIN_MAC" />
+    <uses-permission android:name="android.permission.CLOUDPOS_PIN_ENCRYPT_DATA" />
+    <uses-permission android:name="android.permission.CLOUDPOS_PIN_UPDATE_USER_KEY" />
+    <uses-permission android:name="android.permission.CLOUDPOS_PIN_UPDATE_MASTER_KEY" />
+
+    <!-- Kalau device kamu CloudPOS, NFC Android standar biasanya tidak dipakai,
+         tapi saya tetap tambahkan karena di manifest kamu ada -->
     <uses-permission android:name="android.permission.NFC"/>
+    <uses-feature android:name="android.hardware.nfc" android:required="false" />
 
     <application
         android:name="androidx.multidex.MultiDexApplication"
@@ -19,8 +42,10 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/AppTheme">
+        android:theme="@style/AppTheme"
+        tools:targetApi="22">
 
+        <!-- Activity utama -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -38,9 +63,8 @@
         <activity android:name=".ui.screens.DestinationMenuActivity" android:exported="true" />
         <activity android:name=".ui.screens.DestinationSelectionActivity" android:exported="true" />
         <activity android:name=".ui.screens.PintuMasukActivity" android:exported="true" />
-        <activity android:name=".ui.screens.ParkingCheckinActivity" android:exported="true" />
-        <activity android:name=".ui.screens.ParkingCheckinSuccessActivity" android:exported="true" />
-        <activity android:name=".ui.screens.ParkingCheckoutActivity" android:exported="true" />
+        <activity android:name=".ui.screens.ParkingActivity" android:exported="true" />
+        <activity android:name=".ui.screens.ParkingSuccessActivity" android:exported="true" />
         <activity android:name=".ui.screens.ParkingCheckoutSuccessActivity" android:exported="true" />
         <activity android:name=".ui.screens.PaymentActivity" android:exported="true" />
         <activity android:name=".ui.screens.PaymentSuccessActivity" android:exported="true" />

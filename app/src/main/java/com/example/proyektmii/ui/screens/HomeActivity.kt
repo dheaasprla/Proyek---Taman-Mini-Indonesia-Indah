@@ -11,7 +11,6 @@ class HomeActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_home)
 
-        // Mengambil referensi ke CardView dari layout dengan pengecekan null
         try {
             val cardPintuMasuk = findViewById<CardView>(R.id.card_pintu_masuk)
             val cardParkir = findViewById<CardView>(R.id.card_parkir)
@@ -24,7 +23,8 @@ class HomeActivity : AppCompatActivity() {
             }
 
             cardParkir.setOnClickListener {
-                startActivity(Intent(this, ParkingCheckinActivity::class.java))
+                // gunakan ParkingActivity final
+                startActivity(Intent(this, ParkingActivity::class.java))
             }
 
             cardDestinasi.setOnClickListener {
@@ -39,8 +39,6 @@ class HomeActivity : AppCompatActivity() {
                 startActivity(Intent(this, CheckBalanceActivity::class.java))
             }
         } catch (e: Exception) {
-            // Ini akan menangkap jika ada View yang tidak ditemukan di layout
-            // dan akan mencetak stack trace.
             e.printStackTrace()
         }
     }

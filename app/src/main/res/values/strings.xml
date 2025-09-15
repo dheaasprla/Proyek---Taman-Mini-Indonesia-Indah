@@ -55,4 +55,8 @@
     <string name="tmii_logo_desc">Logo TMII</string>
     <string name="sukses_icon">Ikon Sukses</string>
     <string name="tmii_logo">Logo TMII</string>
+    <string name="pilih_layanan">Pilih Layanan</string>
+    <string name="destination_title">Pilih Destinasi</string>
+    <string name="total_tiket">Total Tiket</string>
+
 </resources>

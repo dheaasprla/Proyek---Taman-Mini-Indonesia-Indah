@@ -13,9 +13,14 @@ import android.widget.ListView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.cloudpos.DeviceException
+import com.cloudpos.POSTerminal
+import com.cloudpos.rfcardreader.RFCardReaderDevice
+import com.cloudpos.rfcardreader.RFCardReaderOperationResult
 import com.example.proyektmii.R
 import com.example.proyektmii.data.CartItem
 import com.example.proyektmii.data.local.AppPreferences
+import com.example.proyektmii.data.local.DummySaldoManager
 import java.text.NumberFormat
 import java.util.Locale
 
@@ -24,12 +29,16 @@ class CartActivity : AppCompatActivity() {
     private lateinit var appPreferences: AppPreferences
     private lateinit var cartListView: ListView
     private lateinit var totalItemText: TextView
-    private lateinit var totalPriceItems: TextView // Menggunakan ID yang benar
+    private lateinit var totalPriceItems: TextView
     private lateinit var totalPaymentText: TextView
     private lateinit var lanjutBayarButton: Button
     private lateinit var backButton: ImageButton
+    private lateinit var nfcSection: View
+    private lateinit var loadingSection: View
+    private lateinit var cartSection: View
 
     private var cartItems = listOf<CartItem>()
+    private var rfReader: RFCardReaderDevice? = null
     private val TAG = "CartActivity"
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -41,19 +50,20 @@ class CartActivity : AppCompatActivity() {
         try {
             cartListView = findViewById(R.id.cart_list_view)
             totalItemText = findViewById(R.id.total_item_text)
-            totalPriceItems = findViewById(R.id.total_price_items) // Menggunakan ID yang benar
+            totalPriceItems = findViewById(R.id.total_price_items)
             totalPaymentText = findViewById(R.id.total_payment_text)
             lanjutBayarButton = findViewById(R.id.lanjut_bayar_button)
             backButton = findViewById(R.id.back_button_cart)
+            nfcSection = findViewById(R.id.nfc_section)
+            loadingSection = findViewById(R.id.loading_section)
+            cartSection = findViewById(R.id.cart_section)
 
             backButton.setOnClickListener { onBackPressed() }
 
             lanjutBayarButton.setOnClickListener {
                 val totalPrice = cartItems.sumOf { it.menuItem.price * it.quantity }
                 if (totalPrice > 0) {
-                    val intent = Intent(this, PaymentActivity::class.java)
-                    intent.putExtra("totalPrice", totalPrice)
-                    startActivity(intent)
+                    performPayment(totalPrice.toLong())
                 } else {
                     Toast.makeText(this, "Keranjang kosong!", Toast.LENGTH_SHORT).show()
                 }
@@ -90,6 +100,80 @@ class CartActivity : AppCompatActivity() {
         totalPaymentText.text = "Rp ${NumberFormat.getNumberInstance(Locale("in", "ID")).format(totalPrice)}"
 
         lanjutBayarButton.isEnabled = totalItems > 0
+    }
+
+    private fun performPayment(amount: Long) {
+        cartSection.visibility = View.GONE
+        nfcSection.visibility = View.VISIBLE
+        loadingSection.visibility = View.GONE
+
+        Thread {
+            try {
+                rfReader = POSTerminal.getInstance(this)
+                    .getDevice("cloudpos.device.rfcardreader") as RFCardReaderDevice
+
+                if (rfReader == null) {
+                    runOnUiThread {
+                        Toast.makeText(this, "Error: Perangkat NFC tidak ditemukan.", Toast.LENGTH_SHORT).show()
+                        cartSection.visibility = View.VISIBLE
+                        nfcSection.visibility = View.GONE
+                    }
+                    return@Thread
+                }
+
+                rfReader?.open(RFCardReaderDevice.MODE_AUTO, 0)
+                val result: RFCardReaderOperationResult = rfReader!!.waitForCardPresent(15000)
+
+                if (result.resultCode == RFCardReaderOperationResult.SUCCESS) {
+                    val cardId = result.card.id.joinToString("") { "%02X".format(it) }
+                    val currentBalance = DummySaldoManager.getOrCreateBalance(cardId).toLong() // Ubah ke Long
+
+                    if (currentBalance >= amount) {
+                        runOnUiThread {
+                            nfcSection.visibility = View.GONE
+                            loadingSection.visibility = View.VISIBLE
+                        }
+                        Thread.sleep(2000)
+                        DummySaldoManager.updateBalance(cardId, currentBalance - amount)
+                        appPreferences.clearCartItems()
+
+                        runOnUiThread {
+                            val intent = Intent(this@CartActivity, PaymentSuccessActivity::class.java)
+                            intent.putExtra("totalPrice", amount.toInt())
+                            intent.putExtra("newBalance", (currentBalance - amount).toInt())
+                            startActivity(intent)
+                            finish()
+                        }
+                    } else {
+                        runOnUiThread {
+                            Toast.makeText(this, "Saldo tidak mencukupi.", Toast.LENGTH_SHORT).show()
+                            cartSection.visibility = View.VISIBLE
+                            nfcSection.visibility = View.GONE
+                        }
+                    }
+                } else {
+                    runOnUiThread {
+                        Toast.makeText(this, "Gagal mendeteksi kartu. Coba lagi.", Toast.LENGTH_SHORT).show()
+                        cartSection.visibility = View.VISIBLE
+                        nfcSection.visibility = View.GONE
+                    }
+                }
+            } catch (e: DeviceException) {
+                runOnUiThread {
+                    Toast.makeText(this, "Error perangkat: ${e.message}", Toast.LENGTH_SHORT).show()
+                    cartSection.visibility = View.VISIBLE
+                    nfcSection.visibility = View.GONE
+                }
+            } catch (e: Exception) {
+                runOnUiThread {
+                    Toast.makeText(this, "Kesalahan: ${e.message}", Toast.LENGTH_SHORT).show()
+                    cartSection.visibility = View.VISIBLE
+                    nfcSection.visibility = View.GONE
+                }
+            } finally {
+                try { rfReader?.close() } catch (_: Exception) {}
+            }
+        }.start()
     }
 
     inner class CartListAdapter(private val items: List<CartItem>) : BaseAdapter() {

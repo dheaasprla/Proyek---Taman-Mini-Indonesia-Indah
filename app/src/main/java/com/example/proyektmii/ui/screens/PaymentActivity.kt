@@ -1,13 +1,18 @@
 package com.example.proyektmii.ui.screens
 
+import android.content.Intent
 import android.os.Bundle
+import android.util.Log
+import android.view.View
 import android.widget.ImageButton
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-import com.cloudpos.jniinterface.SmartCardInterface
-import com.cloudpos.jniinterface.SmartCardSlotInfo
+import com.cloudpos.DeviceException
+import com.cloudpos.POSTerminal
+import com.cloudpos.rfcardreader.RFCardReaderDevice
+import com.cloudpos.rfcardreader.RFCardReaderOperationResult
 import com.example.proyektmii.R
-import com.google.android.material.button.MaterialButton
+import com.example.proyektmii.data.local.DummySaldoManager
 import java.text.NumberFormat
 import java.util.Locale
 
@@ -15,8 +20,12 @@ class PaymentActivity : AppCompatActivity() {
 
     private lateinit var statusTextView: TextView
     private lateinit var backButton: ImageButton
-    private lateinit var payButton: MaterialButton
     private lateinit var totalPriceTextView: TextView
+    private lateinit var nfcSection: View
+    private lateinit var loadingSection: View
+
+    private var rfReader: RFCardReaderDevice? = null
+    private val TAG = "PaymentActivity"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -24,71 +33,92 @@ class PaymentActivity : AppCompatActivity() {
 
         statusTextView = findViewById(R.id.status_textview)
         backButton = findViewById(R.id.back_button_payment)
-        payButton = findViewById(R.id.pay_button)
         totalPriceTextView = findViewById(R.id.total_price_text)
+        nfcSection = findViewById(R.id.nfc_section)
+        loadingSection = findViewById(R.id.loading_section)
 
         val totalPrice = intent.getLongExtra("totalPrice", 0L)
         totalPriceTextView.text = "Total: Rp ${NumberFormat.getNumberInstance(Locale("in", "ID")).format(totalPrice)}"
 
         backButton.setOnClickListener { onBackPressed() }
-        payButton.setOnClickListener { performPayment(totalPrice) }
+
+        // Memulai proses pembayaran secara otomatis saat layar terbuka
+        performPayment(totalPrice)
     }
 
     private fun performPayment(amount: Long) {
-        val slot = SmartCardInterface.DEFAULT_SLOT
-
-        statusTextView.text = "Memproses pembayaran..."
+        statusTextView.text = "Tempelkan kartu Anda..."
+        nfcSection.visibility = View.VISIBLE
+        loadingSection.visibility = View.GONE
 
         Thread {
             try {
-                val openResult = SmartCardInterface.open(slot)
-                if (openResult == 0) {
-                    runOnUiThread { statusTextView.text = "Koneksi berhasil dibuka." }
+                rfReader = POSTerminal.getInstance(this)
+                    .getDevice("cloudpos.device.rfcardreader") as RFCardReaderDevice
 
-                    val powerOnResult = SmartCardInterface.powerOn(slot, ByteArray(64), SmartCardSlotInfo())
-                    if (powerOnResult == 0) {
-                        runOnUiThread { statusTextView.text = "Kartu terdeteksi. Melakukan transaksi..." }
+                if (rfReader == null) {
+                    runOnUiThread {
+                        statusTextView.text = "Error: Perangkat NFC tidak ditemukan."
+                        nfcSection.visibility = View.GONE
+                    }
+                    return@Thread
+                }
 
-                        val amountHex = String.format("%08X", amount)
-                        val apdu = hexStringToByteArray("D1D1D1D1" + amountHex)
-                        val response = ByteArray(256)
+                rfReader?.open(RFCardReaderDevice.MODE_AUTO, 0)
+                val result: RFCardReaderOperationResult = rfReader!!.waitForCardPresent(15000)
 
-                        val transmitResult = SmartCardInterface.transmit(slot, apdu, response)
+                if (result.resultCode == RFCardReaderOperationResult.SUCCESS) {
+                    runOnUiThread {
+                        statusTextView.text = "Memproses pembayaran..."
+                        nfcSection.visibility = View.GONE
+                        loadingSection.visibility = View.VISIBLE
+                    }
 
-                        if (transmitResult >= 0) {
-                            runOnUiThread { statusTextView.text = "Pembayaran berhasil!" }
-                        } else {
-                            runOnUiThread { statusTextView.text = "Gagal melakukan transaksi. (Kode: $transmitResult)" }
+                    val cardId = result.card.id.joinToString("") { "%02X".format(it) }
+                    val currentBalance = DummySaldoManager.getOrCreateBalance(cardId).toLong()
+
+                    if (currentBalance >= amount) {
+                        Thread.sleep(2000)
+
+                        val newBalance = currentBalance - amount
+                        // Perbaiki baris ini
+                        DummySaldoManager.updateBalance(cardId, currentBalance - amount)
+
+                        runOnUiThread {
+                            statusTextView.text = "Pembayaran berhasil!"
+                            val intent = Intent(this@PaymentActivity, PaymentSuccessActivity::class.java)
+                            intent.putExtra("totalPrice", amount.toInt())
+                            intent.putExtra("newBalance", newBalance.toInt())
+                            startActivity(intent)
+                            finish()
                         }
                     } else {
-                        runOnUiThread { statusTextView.text = "Gagal menyalakan kartu. (Kode: $powerOnResult)" }
+                        runOnUiThread {
+                            statusTextView.text = "Saldo tidak mencukupi."
+                            loadingSection.visibility = View.GONE
+                            nfcSection.visibility = View.GONE
+                        }
                     }
                 } else {
-                    runOnUiThread { statusTextView.text = "Gagal membuka koneksi. (Kode: $openResult)" }
+                    runOnUiThread {
+                        statusTextView.text = "Gagal mendeteksi kartu. Coba lagi."
+                        nfcSection.visibility = View.GONE
+                    }
+                }
+
+            } catch (e: DeviceException) {
+                runOnUiThread {
+                    statusTextView.text = "Error perangkat: ${e.message}"
+                    nfcSection.visibility = View.GONE
                 }
             } catch (e: Exception) {
-                e.printStackTrace()
-                runOnUiThread { statusTextView.text = "Terjadi kesalahan: ${e.message}" }
-                SmartCardInterface.notifyCancel()
-            } finally {
-                try {
-                    SmartCardInterface.powerOff(slot)
-                    SmartCardInterface.close(slot)
-                } catch (e: Exception) {
-                    e.printStackTrace()
+                runOnUiThread {
+                    statusTextView.text = "Kesalahan: ${e.message}"
+                    nfcSection.visibility = View.GONE
                 }
+            } finally {
+                try { rfReader?.close() } catch (_: Exception) {}
             }
         }.start()
-    }
-
-    private fun hexStringToByteArray(s: String): ByteArray {
-        val len = s.length
-        val data = ByteArray(len / 2)
-        var i = 0
-        while (i < len) {
-            data[i / 2] = ((Character.digit(s[i], 16) shl 4) + Character.digit(s[i + 1], 16)).toByte()
-            i += 2
-        }
-        return data
     }
 }

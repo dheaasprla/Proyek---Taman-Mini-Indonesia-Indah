@@ -8,10 +8,10 @@ import com.example.proyektmii.data.PaymentHistoryItem
 import com.example.proyektmii.data.TicketItem
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
-import kotlin.collections.emptyList
 
 class AppPreferences(context: Context) {
-    private val preferences: SharedPreferences = context.getSharedPreferences("tmii_app_prefs", Context.MODE_PRIVATE)
+    private val preferences: SharedPreferences =
+        context.getSharedPreferences("tmii_app_prefs", Context.MODE_PRIVATE)
     private val gson = Gson()
 
     companion object {
@@ -45,9 +45,7 @@ class AppPreferences(context: Context) {
             } catch (e: Exception) {
                 null
             }
-        } else {
-            null
-        }
+        } else null
     }
 
     fun saveUserData(cardId: String, name: String) {
@@ -58,7 +56,6 @@ class AppPreferences(context: Context) {
     }
 
     fun getUserCardId(): String? = preferences.getString(KEY_USER_CARD_ID, null)
-
     fun getUserName(): String? = preferences.getString(KEY_USER_NAME, null)
 
     fun addPaymentToHistory(item: PaymentHistoryItem) {
@@ -72,14 +69,8 @@ class AppPreferences(context: Context) {
         val json = preferences.getString(KEY_PAYMENT_HISTORY, null)
         val type = object : TypeToken<List<PaymentHistoryItem>>() {}.type
         return if (json != null) {
-            try {
-                gson.fromJson(json, type)
-            } catch (e: Exception) {
-                emptyList()
-            }
-        } else {
-            emptyList()
-        }
+            try { gson.fromJson(json, type) } catch (e: Exception) { emptyList() }
+        } else emptyList()
     }
 
     fun clearPaymentHistory() {
@@ -112,45 +103,28 @@ class AppPreferences(context: Context) {
 
     fun saveTicketItem(ticketItem: TicketItem?) {
         val editor = preferences.edit()
-        if (ticketItem == null) {
-            editor.remove(KEY_TICKET_ITEM_JSON)
-        } else {
-            val json = gson.toJson(ticketItem)
-            editor.putString(KEY_TICKET_ITEM_JSON, json)
-        }
+        if (ticketItem == null) editor.remove(KEY_TICKET_ITEM_JSON)
+        else editor.putString(KEY_TICKET_ITEM_JSON, gson.toJson(ticketItem))
         editor.apply()
     }
 
     fun getTicketItem(): TicketItem? {
         val json = preferences.getString(KEY_TICKET_ITEM_JSON, null)
         return if (json != null) {
-            try {
-                gson.fromJson(json, TicketItem::class.java)
-            } catch (e: Exception) {
-                null
-            }
-        } else {
-            null
-        }
+            try { gson.fromJson(json, TicketItem::class.java) } catch (e: Exception) { null }
+        } else null
     }
 
     fun saveCartItems(cartItems: List<CartItem>) {
-        val json = gson.toJson(cartItems)
-        preferences.edit().putString(KEY_CART_ITEMS_JSON, json).apply()
+        preferences.edit().putString(KEY_CART_ITEMS_JSON, gson.toJson(cartItems)).apply()
     }
 
     fun getCartItems(): List<CartItem> {
         val json = preferences.getString(KEY_CART_ITEMS_JSON, null)
         val type = object : TypeToken<List<CartItem>>() {}.type
         return if (json != null) {
-            try {
-                gson.fromJson(json, type)
-            } catch (e: Exception) {
-                emptyList()
-            }
-        } else {
-            emptyList()
-        }
+            try { gson.fromJson(json, type) } catch (e: Exception) { emptyList() }
+        } else emptyList()
     }
 
     fun clearCartItems() {

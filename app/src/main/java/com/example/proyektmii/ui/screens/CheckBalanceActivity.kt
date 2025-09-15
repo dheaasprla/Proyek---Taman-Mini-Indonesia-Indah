@@ -1,12 +1,17 @@
 package com.example.proyektmii.ui.screens
 
 import android.os.Bundle
+import android.util.Log
 import android.widget.ImageButton
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-import com.cloudpos.jniinterface.SmartCardInterface
-import com.cloudpos.jniinterface.SmartCardSlotInfo
+import com.cloudpos.DeviceException
+import com.cloudpos.POSTerminal
+import com.cloudpos.rfcardreader.RFCardReaderDevice
+import com.cloudpos.rfcardreader.RFCardReaderOperationResult
+import com.cloudpos.card.Card
 import com.example.proyektmii.R
+import com.example.proyektmii.data.local.DummySaldoManager
 import java.text.NumberFormat
 import java.util.Locale
 
@@ -14,7 +19,10 @@ class CheckBalanceActivity : AppCompatActivity() {
 
     private lateinit var balanceTextView: TextView
     private lateinit var statusTextView: TextView
+    private lateinit var cardIdTextView: TextView
     private lateinit var backButton: ImageButton
+
+    private var rfReader: RFCardReaderDevice? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -22,81 +30,60 @@ class CheckBalanceActivity : AppCompatActivity() {
 
         balanceTextView = findViewById(R.id.balance_textview)
         statusTextView = findViewById(R.id.status_textview)
+        cardIdTextView = findViewById(R.id.card_id_text)
         backButton = findViewById(R.id.back_button_check_balance)
 
-        backButton.setOnClickListener {
-            onBackPressed()
-        }
+        backButton.setOnClickListener { finish() }
 
-        checkBalance()
+        startCheckBalance()
     }
 
-    private fun checkBalance() {
-        val slot = SmartCardInterface.DEFAULT_SLOT
-
-        statusTextView.text = "Memeriksa saldo..."
+    private fun startCheckBalance() {
+        statusTextView.text = "Tempelkan kartu Anda..."
         balanceTextView.text = "Rp -"
+        cardIdTextView.text = "xxxxxxxxxxxx"
 
         Thread {
             try {
-                val openResult = SmartCardInterface.open(slot)
-                if (openResult != 0) {
-                    runOnUiThread { statusTextView.text = "Gagal membuka koneksi ke reader. (Kode: $openResult)" }
-                    return@Thread
+                rfReader = POSTerminal.getInstance(this)
+                    .getDevice("cloudpos.device.rfcardreader") as RFCardReaderDevice
+
+                // mode AUTO, speed default
+                rfReader?.open(RFCardReaderDevice.MODE_AUTO, 0)
+
+                // tunggu kartu selama 15 detik
+                val result: RFCardReaderOperationResult =
+                    rfReader!!.waitForCardPresent(15000)
+
+                val card: Card = result.card
+                val uidBytes: ByteArray = card.id
+                val uid: String = uidBytes.joinToString("") { "%02X".format(it) }
+
+                // ambil atau buat saldo dummy
+                val saldo = DummySaldoManager.getOrCreateBalance(uid)
+                val formatted = NumberFormat.getNumberInstance(Locale("in", "ID")).format(saldo)
+
+                runOnUiThread {
+                    statusTextView.text = "Kartu terdeteksi!"
+                    cardIdTextView.text = uid
+                    balanceTextView.text = "Rp $formatted"
                 }
 
-                val powerOnResult = SmartCardInterface.powerOn(slot, ByteArray(64), SmartCardSlotInfo())
-                if (powerOnResult != 0) {
-                    runOnUiThread { statusTextView.text = "Gagal menyalakan kartu. (Kode: $powerOnResult)" }
-                    return@Thread
-                }
-
-                val apdu = hexStringToByteArray("FFCA000000")
-                val response = ByteArray(256)
-
-                val transmitResult = SmartCardInterface.transmit(slot, apdu, response)
-
-                if (transmitResult >= 0) {
-                    runOnUiThread { statusTextView.text = "Data berhasil dibaca." }
-                    val balanceHex = response.copyOfRange(0, transmitResult).toHex()
-                    val balance = hexStringToDecimal(balanceHex)
-
-                    runOnUiThread {
-                        val formattedBalance = NumberFormat.getNumberInstance(Locale("in", "ID")).format(balance)
-                        balanceTextView.text = "Rp $formattedBalance"
-                    }
-                } else {
-                    runOnUiThread { statusTextView.text = "Gagal membaca data kartu. (Kode: $transmitResult)" }
+            } catch (e: DeviceException) {
+                Log.e("CheckBalance", "DeviceException", e)
+                runOnUiThread {
+                    statusTextView.text = "Error: ${e.message}"
+                    balanceTextView.text = "Rp -"
                 }
             } catch (e: Exception) {
-                e.printStackTrace()
-                runOnUiThread { statusTextView.text = "Terjadi kesalahan: ${e.message}" }
-                SmartCardInterface.notifyCancel()
-            } finally {
-                try {
-                    SmartCardInterface.powerOff(slot)
-                    SmartCardInterface.close(slot)
-                } catch (e: Exception) {
-                    e.printStackTrace()
+                Log.e("CheckBalance", "Exception", e)
+                runOnUiThread {
+                    statusTextView.text = "Kesalahan: ${e.message}"
+                    balanceTextView.text = "Rp -"
                 }
+            } finally {
+                try { rfReader?.close() } catch (_: Exception) {}
             }
         }.start()
-    }
-
-    private fun hexStringToByteArray(s: String): ByteArray {
-        val len = s.length
-        val data = ByteArray(len / 2)
-        var i = 0
-        while (i < len) {
-            data[i / 2] = ((Character.digit(s[i], 16) shl 4) + Character.digit(s[i + 1], 16)).toByte()
-            i += 2
-        }
-        return data
-    }
-
-    private fun ByteArray.toHex(): String = joinToString("") { "%02x".format(it) }
-
-    private fun hexStringToDecimal(hex: String): Long {
-        return hex.toLong(16)
     }
 }

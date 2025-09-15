@@ -16,7 +16,8 @@ class MainActivity : AppCompatActivity() {
         }
 
         findViewById<CardView>(R.id.card_parkir).setOnClickListener {
-            startActivity(Intent(this, ParkingCheckinActivity::class.java))
+            // gunakan ParkingActivity final
+            startActivity(Intent(this, ParkingActivity::class.java))
         }
 
         findViewById<CardView>(R.id.card_destinasi).setOnClickListener {

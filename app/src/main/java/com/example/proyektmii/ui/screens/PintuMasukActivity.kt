@@ -2,7 +2,6 @@ package com.example.proyektmii.ui.screens
 
 import android.content.Intent
 import android.os.Bundle
-import android.widget.Button
 import android.widget.ImageButton
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
@@ -17,7 +16,6 @@ class PintuMasukActivity : AppCompatActivity() {
 
     private lateinit var statusTextView: TextView
     private lateinit var textStatus: TextView
-    private lateinit var retryButton: Button
     private lateinit var backButton: ImageButton
 
     private var rfReader: RFCardReaderDevice? = null
@@ -28,11 +26,9 @@ class PintuMasukActivity : AppCompatActivity() {
 
         statusTextView = findViewById(R.id.status_textview)
         textStatus = findViewById(R.id.text_status)
-        retryButton = findViewById(R.id.retry_button)
         backButton = findViewById(R.id.back_button_pintu_masuk)
 
         backButton.setOnClickListener { finish() }
-        retryButton.setOnClickListener { startCardDetection() }
 
         // mulai scan saat activity dibuka
         startCardDetection()
@@ -41,7 +37,6 @@ class PintuMasukActivity : AppCompatActivity() {
     private fun startCardDetection() {
         statusTextView.text = "Menunggu kartu..."
         textStatus.text = "Tempelkan kartu Anda"
-        retryButton.isEnabled = false
 
         Thread {
             try {
@@ -74,7 +69,6 @@ class PintuMasukActivity : AppCompatActivity() {
                 runOnUiThread {
                     statusTextView.text = "Error: ${e.message}"
                     textStatus.text = "Silakan coba lagi"
-                    retryButton.isEnabled = true
                 }
             } finally {
                 try { rfReader?.close() } catch (_: Exception) {}

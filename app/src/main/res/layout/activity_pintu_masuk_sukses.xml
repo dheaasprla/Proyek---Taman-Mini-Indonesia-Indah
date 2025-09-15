@@ -3,87 +3,108 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/white"
+    android:background="#F44336"
     tools:context=".ui.screens.PintuMasukSuksesActivity">
 
-    <!-- Background atas -->
+    <!-- Background awan top -->
     <ImageView
         android:layout_width="match_parent"
-        android:layout_height="300dp"
+        android:layout_height="150dp"
         android:layout_alignParentTop="true"
         android:src="@drawable/awan"
         android:scaleType="centerCrop"
         android:contentDescription="@string/background_awan" />
 
-    <!-- Background bawah -->
+    <!-- Background ombak bottom -->
     <ImageView
         android:layout_width="match_parent"
-        android:layout_height="250dp"
+        android:layout_height="120dp"
         android:layout_alignParentBottom="true"
         android:src="@drawable/ombak"
         android:scaleType="fitXY"
         android:contentDescription="@string/background_ombak" />
 
+    <!-- Main Layout -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
-        android:paddingHorizontal="24dp"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="12dp"
         android:gravity="center_horizontal">
 
-        <!-- Tombol back -->
-        <ImageButton
-            android:id="@+id/back_button_pintu_sukses"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:layout_marginTop="40dp"
-            android:layout_gravity="start"
-            android:background="@drawable/rounded_back_button_white"
-            android:src="@drawable/ic_arrow_back_black"
-            android:contentDescription="@string/back_button"/>
+        <!-- Back Button -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:gravity="start|center_vertical">
 
-        <Space
+            <ImageButton
+                android:id="@+id/back_button_pintu_sukses"
+                android:layout_width="35dp"
+                android:layout_height="35dp"
+                android:background="@drawable/rounded_back_button_white"
+                android:src="@drawable/ic_arrow_back_black"
+                android:contentDescription="@string/back_button"/>
+        </LinearLayout>
+
+        <!-- Spacer untuk center content -->
+        <View
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"/>
 
-        <!-- Icon sukses -->
+        <!-- Success Icon -->
         <ImageView
-            android:layout_width="200dp"
-            android:layout_height="200dp"
+            android:layout_width="140dp"
+            android:layout_height="140dp"
             android:src="@drawable/berhasil"
             android:contentDescription="@string/sukses_icon"/>
 
-        <!-- Teks sukses -->
+        <!-- Success Text -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="15dp"
+            android:layout_marginTop="16dp"
             android:text="SUKSES!"
-            android:textSize="36sp"
+            android:textSize="28sp"
             android:textStyle="bold"
-            android:textColor="@color/black"/>
+            android:textColor="@color/white"/>
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
+            android:layout_marginTop="8dp"
             android:text="Silahkan Masuk"
-            android:textSize="22sp"
-            android:textColor="@color/black"/>
+            android:textSize="18sp"
+            android:textColor="@color/white"/>
 
-        <TextView
-            android:id="@+id/uid_textview"
+        <!-- UID Display -->
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="UID Kartu: -"
-            android:textSize="18sp"
-            android:textColor="@color/black"
-            android:layout_marginTop="20dp"/>
+            android:layout_marginTop="16dp"
+            android:background="@android:color/white"
+            android:paddingHorizontal="16dp"
+            android:paddingVertical="8dp"
+            android:orientation="horizontal"
+            android:gravity="center">
 
-        <Space
+            <TextView
+                android:id="@+id/uid_textview"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="UID Kartu: -"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:textColor="@color/black"/>
+        </LinearLayout>
+
+        <!-- Bottom spacer -->
+        <View
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"/>
+
     </LinearLayout>
 </RelativeLayout>

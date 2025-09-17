@@ -1,35 +1,161 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:gravity="center"
-    android:padding="24dp"
-    android:background="@color/white">
+    android:background="#FFF59D"
+    tools:context=".ui.screens.ParkingActivity">
 
+    <!-- Background awan top -->
     <ImageView
-        android:id="@+id/parking_image"
-        android:layout_width="150dp"
+        android:layout_width="match_parent"
         android:layout_height="150dp"
-        android:src="@drawable/parkir"
-        android:contentDescription="@string/app_name" />
+        android:layout_alignParentTop="true"
+        android:src="@drawable/awan"
+        android:scaleType="centerCrop"
+        android:contentDescription="@string/background_awan" />
 
-    <TextView
-        android:id="@+id/status_textview"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Tempelkan kartu Anda..."
-        android:textSize="18sp"
-        android:textColor="@color/black"
-        android:layout_marginTop="24dp"
-        android:gravity="center" />
+    <!-- Background ombak bottom -->
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="120dp"
+        android:layout_alignParentBottom="true"
+        android:src="@drawable/ombak"
+        android:scaleType="fitXY"
+        android:contentDescription="@string/background_ombak"/>
 
-    <ImageButton
-        android:id="@+id/back_button_parking"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
-        android:src="@android:drawable/ic_menu_close_clear_cancel"
-        android:background="@android:color/transparent"
-        android:contentDescription="Kembali"
-        android:layout_marginTop="32dp" />
-</LinearLayout>
+    <!-- Main content -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="12dp">
+
+        <!-- Header -->
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="50dp">
+
+            <ImageButton
+                android:id="@+id/back_button_parking"
+                android:layout_width="35dp"
+                android:layout_height="35dp"
+                android:layout_alignParentStart="true"
+                android:layout_centerVertical="true"
+                android:background="@drawable/rounded_back_button"
+                android:src="@drawable/ic_arrow_back_black"
+                android:contentDescription="@string/back_button"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerInParent="true"
+                android:text="@string/parkir"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:textColor="@color/black"/>
+
+            <ImageView
+                android:layout_width="35dp"
+                android:layout_height="35dp"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
+                android:src="@drawable/tmii_logo"
+                android:contentDescription="@string/tmii_logo"/>
+        </RelativeLayout>
+
+        <!-- Car Icon dan Text -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:orientation="horizontal"
+            android:gravity="center_horizontal">
+
+            <ImageView
+                android:layout_width="45dp"
+                android:layout_height="35dp"
+                android:src="@drawable/mobil"
+                android:layout_marginEnd="8dp"
+                android:contentDescription="@string/mobil_icon"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Parkir"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:textColor="@color/black"/>
+        </LinearLayout>
+
+        <!-- Main Instruction -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="@string/silahkan_tap_kartu"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:gravity="center"
+            android:textColor="@color/black"/>
+
+        <!-- Spacer -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"/>
+
+        <!-- Circle Parkir Area -->
+        <LinearLayout
+            android:layout_width="180dp"
+            android:layout_height="180dp"
+            android:background="@android:color/white"
+            android:gravity="center"
+            android:layout_gravity="center_horizontal"
+            android:orientation="vertical">
+
+            <ImageView
+                android:layout_width="60dp"
+                android:layout_height="60dp"
+                android:src="@drawable/mobil"
+                android:contentDescription="@string/mobil_icon"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="@string/parkir"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textColor="@color/blue"/>
+        </LinearLayout>
+
+        <!-- Status Text Area -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:orientation="vertical"
+            android:gravity="center_horizontal">
+
+            <TextView
+                android:id="@+id/status_textview"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Tempelkan kartu untuk masuk / keluar parkir..."
+                android:textSize="16sp"
+                android:textColor="@color/black"
+                android:gravity="center"/>
+
+        </LinearLayout>
+
+        <!-- Spacer -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"/>
+
+    </LinearLayout>
+</RelativeLayout>

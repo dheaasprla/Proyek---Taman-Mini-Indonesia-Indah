@@ -2,14 +2,17 @@ package com.example.proyektmii.data.local
 
 object DummySaldoManager {
     private val saldoMap = mutableMapOf<String, Long>()
+    private const val INITIAL_BALANCE = 100_000L
 
     fun getOrCreateBalance(cardId: String): Long {
-        return saldoMap.getOrPut(cardId) { 100_000L } // setiap kartu baru langsung ada Rp100.000
+        // Hanya akan membuat saldo awal jika ID kartu belum ada
+        return saldoMap.getOrPut(cardId) { INITIAL_BALANCE }
     }
 
-    fun updateBalance(cardId: String, amount: Long) {
-        val current = saldoMap.getOrPut(cardId) { 100_000L }
-        saldoMap[cardId] = (current + amount).coerceAtLeast(0L)
+    fun updateBalance(cardId: String, amountToDeduct: Long) {
+        val currentBalance = getOrCreateBalance(cardId)
+        val newBalance = (currentBalance - amountToDeduct).coerceAtLeast(0L)
+        saldoMap[cardId] = newBalance
     }
 
     fun getBalance(cardId: String): Long {

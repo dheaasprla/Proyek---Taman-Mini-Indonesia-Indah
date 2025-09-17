@@ -80,8 +80,8 @@ class PaymentActivity : AppCompatActivity() {
                     if (currentBalance >= amount) {
                         Thread.sleep(2000)
 
-                        val newBalance = currentBalance - amount
-                        DummySaldoManager.updateBalance(cardId, newBalance)
+                        DummySaldoManager.updateBalance(cardId, amount)
+                        val newBalance = DummySaldoManager.getBalance(cardId)
 
                         runOnUiThread {
                             statusTextView.text = "Pembayaran berhasil!"

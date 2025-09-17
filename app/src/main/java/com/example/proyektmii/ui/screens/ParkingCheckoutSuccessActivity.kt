@@ -6,6 +6,8 @@ import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.example.proyektmii.R
 import com.example.proyektmii.data.local.AppPreferences
+import com.example.proyektmii.data.local.DummySaldoManager
+import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -30,19 +32,21 @@ class ParkingCheckoutSuccessActivity : AppCompatActivity() {
         balanceText = findViewById(R.id.balance_text)
         backButton = findViewById(R.id.back_button)
 
-        // Ambil data dari Intent
         val uid = intent.getStringExtra("uid") ?: "-"
         val entryTime = intent.getLongExtra("entryTime", 0L)
         val exitTime = intent.getLongExtra("exitTime", 0L)
         val cost = intent.getIntExtra("cost", 0)
 
-        // Ambil saldo dari SharedPreferences
-        val cardData = prefs.getCardData(uid)
-        var balance = cardData?.balance ?: 0
-        val name = cardData?.name ?: "Pengunjung"
+        // Ambil saldo dari DummySaldoManager, bukan dari AppPreferences
+        var balance = DummySaldoManager.getOrCreateBalance(uid)
 
-        balance -= cost
-        prefs.saveCardData(uid, name, balance)
+        // Logika pemotongan saldo yang benar
+        if (balance >= cost) {
+            DummySaldoManager.updateBalance(uid, cost.toLong())
+            balance = DummySaldoManager.getBalance(uid)
+        } else {
+            // Tampilkan pesan error jika saldo tidak mencukupi (opsional)
+        }
 
         // Format jam
         val formatter = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale("in", "ID"))
@@ -52,8 +56,8 @@ class ParkingCheckoutSuccessActivity : AppCompatActivity() {
         // Tampilkan data
         uidTextView.text = "UID: $uid"
         exitTimeText.text = "Masuk: $entryStr\nKeluar: $exitStr"
-        feeText.text = "Biaya Parkir: Rp $cost"
-        balanceText.text = "Sisa Saldo: Rp $balance"
+        feeText.text = "Biaya Parkir: Rp ${NumberFormat.getNumberInstance(Locale("in", "ID")).format(cost)}"
+        balanceText.text = "Sisa Saldo: Rp ${NumberFormat.getNumberInstance(Locale("in", "ID")).format(balance)}"
 
         backButton.setOnClickListener { finish() }
     }

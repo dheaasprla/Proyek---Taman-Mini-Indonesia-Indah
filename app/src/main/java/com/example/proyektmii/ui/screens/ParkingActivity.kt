@@ -42,10 +42,14 @@ class ParkingActivity : AppCompatActivity() {
                 rfReader?.open(RFCardReaderDevice.MODE_AUTO, 0)
 
                 val result: RFCardReaderOperationResult = rfReader!!.waitForCardPresent(15000)
-                val card: Card = result.card
-                val uid = card.id.joinToString("") { "%02X".format(it) }
+                val card: Card? = result.card
 
-                runOnUiThread { handleCardTap(uid) }
+                if (result.resultCode == RFCardReaderOperationResult.SUCCESS && card != null) {
+                    val uid = card.id.joinToString("") { "%02X".format(it) }
+                    runOnUiThread { handleCardTap(uid) }
+                } else {
+                    runOnUiThread { statusTextView.text = "Gagal mendeteksi kartu. Coba lagi." }
+                }
 
             } catch (e: DeviceException) {
                 runOnUiThread { statusTextView.text = "Error device: ${e.message}" }
@@ -62,7 +66,7 @@ class ParkingActivity : AppCompatActivity() {
         if (entryTime == 0L) {
             // === Check-in ===
             prefs.saveParkingEntryTime(System.currentTimeMillis())
-            // buat data kartu jika belum ada
+            // Buat data kartu jika belum ada, saldo tidak akan ditimpa jika sudah ada
             if (cardData == null) {
                 prefs.saveCardData(uid, "Pengunjung", 100000) // default saldo
             }
@@ -77,7 +81,6 @@ class ParkingActivity : AppCompatActivity() {
             val durationMinutes = ((exitTime - entryTime) / 60000).toInt()
             val cost = calculateParkingFee(durationMinutes)
 
-            // reset entry time
             prefs.clearParkingData()
 
             val intent = Intent(this, ParkingCheckoutSuccessActivity::class.java)
@@ -94,6 +97,6 @@ class ParkingActivity : AppCompatActivity() {
         val baseRate = 5000
         val perHour = 3000
         return if (minutes <= 60) baseRate
-        else baseRate + ((minutes - 60) / 60 + 1) * perHour
+        else baseRate + ((minutes - 60) / 60) * perHour
     }
 }

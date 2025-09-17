@@ -126,7 +126,7 @@ class CartActivity : AppCompatActivity() {
 
                 if (result.resultCode == RFCardReaderOperationResult.SUCCESS) {
                     val cardId = result.card.id.joinToString("") { "%02X".format(it) }
-                    val currentBalance = DummySaldoManager.getOrCreateBalance(cardId).toLong() // Ubah ke Long
+                    val currentBalance = DummySaldoManager.getOrCreateBalance(cardId)
 
                     if (currentBalance >= amount) {
                         runOnUiThread {
@@ -134,13 +134,16 @@ class CartActivity : AppCompatActivity() {
                             loadingSection.visibility = View.VISIBLE
                         }
                         Thread.sleep(2000)
-                        DummySaldoManager.updateBalance(cardId, currentBalance - amount)
-                        appPreferences.clearCartItems()
+
+                        // Perbaikan penting: Panggil updateBalance dengan 'amount' (jumlah yang harus dikurangkan), bukan 'newBalance'
+                        DummySaldoManager.updateBalance(cardId, amount)
+                        val newBalance = DummySaldoManager.getBalance(cardId)
 
                         runOnUiThread {
+                            appPreferences.clearCartItems()
                             val intent = Intent(this@CartActivity, PaymentSuccessActivity::class.java)
                             intent.putExtra("totalPrice", amount.toInt())
-                            intent.putExtra("newBalance", (currentBalance - amount).toInt())
+                            intent.putExtra("newBalance", newBalance.toInt())
                             startActivity(intent)
                             finish()
                         }

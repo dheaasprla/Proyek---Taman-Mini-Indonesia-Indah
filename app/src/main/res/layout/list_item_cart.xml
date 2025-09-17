@@ -3,14 +3,14 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="4dp"
-    app:cardCornerRadius="8dp"
-    app:cardElevation="2dp">
+    android:layout_margin="2dp"
+    app:cardCornerRadius="6dp"
+    app:cardElevation="1dp">
 
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="8dp">
+        android:padding="6dp">
 
         <LinearLayout
             android:layout_width="wrap_content"
@@ -24,7 +24,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Nama Makanan"
-                android:textSize="12sp"
+                android:textSize="11sp"
                 android:textStyle="bold"
                 android:textColor="@color/black" />
 
@@ -33,7 +33,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Rp 0"
-                android:textSize="10sp"
+                android:textSize="9sp"
                 android:textColor="@color/black" />
         </LinearLayout>
 
@@ -48,10 +48,10 @@
 
             <Button
                 android:id="@+id/minus_button"
-                android:layout_width="32dp"
-                android:layout_height="32dp"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
                 android:text="-"
-                android:textSize="12sp"
+                android:textSize="10sp"
                 android:textColor="@color/white"
                 android:backgroundTint="#1976D2"
                 android:minWidth="0dp"
@@ -63,17 +63,17 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="0"
-                android:textSize="12sp"
+                android:textSize="11sp"
                 android:textStyle="bold"
                 android:textColor="@color/black"
-                android:layout_marginHorizontal="8dp" />
+                android:layout_marginHorizontal="6dp" />
 
             <Button
                 android:id="@+id/plus_button"
-                android:layout_width="32dp"
-                android:layout_height="32dp"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
                 android:text="+"
-                android:textSize="12sp"
+                android:textSize="10sp"
                 android:textColor="@color/white"
                 android:backgroundTint="#1976D2"
                 android:minWidth="0dp"

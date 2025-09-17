@@ -18,7 +18,7 @@
     <!-- Background ombak bottom -->
     <ImageView
         android:layout_width="match_parent"
-        android:layout_height="120dp"
+        android:layout_height="200dp"
         android:layout_alignParentBottom="true"
         android:src="@drawable/ombak"
         android:scaleType="fitXY"

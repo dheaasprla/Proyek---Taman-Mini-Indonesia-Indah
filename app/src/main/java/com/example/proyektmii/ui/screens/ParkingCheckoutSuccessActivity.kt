@@ -7,6 +7,7 @@ import androidx.appcompat.app.AppCompatActivity
 import com.example.proyektmii.R
 import com.example.proyektmii.data.local.AppPreferences
 import com.example.proyektmii.data.local.DummySaldoManager
+import com.example.proyektmii.util.PrintHelper
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.*
@@ -26,38 +27,44 @@ class ParkingCheckoutSuccessActivity : AppCompatActivity() {
 
         prefs = AppPreferences(this)
 
-        uidTextView = findViewById(R.id.uid_textview)
-        exitTimeText = findViewById(R.id.exit_time_text)
-        feeText = findViewById(R.id.fee_text)
-        balanceText = findViewById(R.id.balance_text)
-        backButton = findViewById(R.id.back_button)
+        uidTextView   = findViewById(R.id.uid_textview)
+        exitTimeText  = findViewById(R.id.exit_time_text)
+        feeText       = findViewById(R.id.fee_text)
+        balanceText   = findViewById(R.id.balance_text)
+        backButton    = findViewById(R.id.back_button)
 
-        val uid = intent.getStringExtra("uid") ?: "-"
+        val uid       = intent.getStringExtra("uid") ?: "-"
         val entryTime = intent.getLongExtra("entryTime", 0L)
-        val exitTime = intent.getLongExtra("exitTime", 0L)
-        val cost = intent.getIntExtra("cost", 0)
+        val exitTime  = intent.getLongExtra("exitTime", 0L)
+        val cost      = intent.getIntExtra("cost", 0)
 
-        // Ambil saldo dari DummySaldoManager, bukan dari AppPreferences
+        // saldo update
         var balance = DummySaldoManager.getOrCreateBalance(uid)
-
-        // Logika pemotongan saldo yang benar
         if (balance >= cost) {
             DummySaldoManager.updateBalance(uid, cost.toLong())
             balance = DummySaldoManager.getBalance(uid)
-        } else {
-            // Tampilkan pesan error jika saldo tidak mencukupi (opsional)
         }
 
-        // Format jam
+        // Format waktu
         val formatter = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale("in", "ID"))
         val entryStr = if (entryTime > 0) formatter.format(Date(entryTime)) else "-"
-        val exitStr = if (exitTime > 0) formatter.format(Date(exitTime)) else "-"
+        val exitStr  = if (exitTime > 0) formatter.format(Date(exitTime)) else "-"
 
-        // Tampilkan data
-        uidTextView.text = "UID: $uid"
+        // tampil di UI
+        uidTextView.text  = "UID: $uid"
         exitTimeText.text = "Masuk: $entryStr\nKeluar: $exitStr"
-        feeText.text = "Biaya Parkir: Rp ${NumberFormat.getNumberInstance(Locale("in", "ID")).format(cost)}"
-        balanceText.text = "Sisa Saldo: Rp ${NumberFormat.getNumberInstance(Locale("in", "ID")).format(balance)}"
+        feeText.text      = "Biaya Parkir: Rp ${NumberFormat.getNumberInstance(Locale("in","ID")).format(cost)}"
+        balanceText.text  = "Sisa Saldo: Rp ${NumberFormat.getNumberInstance(Locale("in","ID")).format(balance)}"
+
+        // === Cetak struk keluar parkir ===
+        PrintHelper.printParkingReceipt(
+            context   = this,
+            uid       = uid,
+            entryTime = entryStr,
+            exitTime  = exitStr,
+            cost      = cost,
+            balance   = balance
+        )
 
         backButton.setOnClickListener { finish() }
     }

@@ -6,12 +6,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.BaseAdapter
-import android.widget.Button
-import android.widget.ImageButton
-import android.widget.ListView
-import android.widget.TextView
-import android.widget.Toast
+import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import com.cloudpos.DeviceException
 import com.cloudpos.POSTerminal
@@ -21,6 +16,7 @@ import com.example.proyektmii.R
 import com.example.proyektmii.data.CartItem
 import com.example.proyektmii.data.local.AppPreferences
 import com.example.proyektmii.data.local.DummySaldoManager
+import com.example.proyektmii.util.PrintHelper
 import java.text.NumberFormat
 import java.util.Locale
 
@@ -47,31 +43,25 @@ class CartActivity : AppCompatActivity() {
 
         appPreferences = AppPreferences(this)
 
-        try {
-            cartListView = findViewById(R.id.cart_list_view)
-            totalItemText = findViewById(R.id.total_item_text)
-            totalPriceItems = findViewById(R.id.total_price_items)
-            totalPaymentText = findViewById(R.id.total_payment_text)
-            lanjutBayarButton = findViewById(R.id.lanjut_bayar_button)
-            backButton = findViewById(R.id.back_button_cart)
-            nfcSection = findViewById(R.id.nfc_section)
-            loadingSection = findViewById(R.id.loading_section)
-            cartSection = findViewById(R.id.cart_section)
+        cartListView = findViewById(R.id.cart_list_view)
+        totalItemText = findViewById(R.id.total_item_text)
+        totalPriceItems = findViewById(R.id.total_price_items)
+        totalPaymentText = findViewById(R.id.total_payment_text)
+        lanjutBayarButton = findViewById(R.id.lanjut_bayar_button)
+        backButton = findViewById(R.id.back_button_cart)
+        nfcSection = findViewById(R.id.nfc_section)
+        loadingSection = findViewById(R.id.loading_section)
+        cartSection = findViewById(R.id.cart_section)
 
-            backButton.setOnClickListener { onBackPressed() }
+        backButton.setOnClickListener { onBackPressed() }
 
-            lanjutBayarButton.setOnClickListener {
-                val totalPrice = cartItems.sumOf { it.menuItem.price * it.quantity }
-                if (totalPrice > 0) {
-                    performPayment(totalPrice.toLong())
-                } else {
-                    Toast.makeText(this, "Keranjang kosong!", Toast.LENGTH_SHORT).show()
-                }
+        lanjutBayarButton.setOnClickListener {
+            val totalPrice = cartItems.sumOf { it.menuItem.price * it.quantity }
+            if (totalPrice > 0) {
+                performPayment(totalPrice.toLong())
+            } else {
+                Toast.makeText(this, "Keranjang kosong!", Toast.LENGTH_SHORT).show()
             }
-        } catch (e: Exception) {
-            Log.e(TAG, "Error initializing views", e)
-            Toast.makeText(this, "Aplikasi mengalami masalah. Silakan coba lagi.", Toast.LENGTH_LONG).show()
-            finish()
         }
     }
 
@@ -82,23 +72,16 @@ class CartActivity : AppCompatActivity() {
 
     private fun loadCartItems() {
         cartItems = appPreferences.getCartItems()
-        if (cartItems.isNotEmpty()) {
-            val adapter = CartListAdapter(cartItems)
-            cartListView.adapter = adapter
-        } else {
-            cartListView.adapter = null
-        }
+        cartListView.adapter = if (cartItems.isNotEmpty()) CartListAdapter(cartItems) else null
         updateSummary()
     }
 
     private fun updateSummary() {
         val totalItems = cartItems.sumOf { it.quantity }
         val totalPrice = cartItems.sumOf { it.menuItem.price * it.quantity }
-
         totalItemText.text = "Total Item (${totalItems})"
         totalPriceItems.text = "Rp ${NumberFormat.getNumberInstance(Locale("in", "ID")).format(totalPrice)}"
         totalPaymentText.text = "Rp ${NumberFormat.getNumberInstance(Locale("in", "ID")).format(totalPrice)}"
-
         lanjutBayarButton.isEnabled = totalItems > 0
     }
 
@@ -111,16 +94,6 @@ class CartActivity : AppCompatActivity() {
             try {
                 rfReader = POSTerminal.getInstance(this)
                     .getDevice("cloudpos.device.rfcardreader") as RFCardReaderDevice
-
-                if (rfReader == null) {
-                    runOnUiThread {
-                        Toast.makeText(this, "Error: Perangkat NFC tidak ditemukan.", Toast.LENGTH_SHORT).show()
-                        cartSection.visibility = View.VISIBLE
-                        nfcSection.visibility = View.GONE
-                    }
-                    return@Thread
-                }
-
                 rfReader?.open(RFCardReaderDevice.MODE_AUTO, 0)
                 val result: RFCardReaderOperationResult = rfReader!!.waitForCardPresent(15000)
 
@@ -135,9 +108,20 @@ class CartActivity : AppCompatActivity() {
                         }
                         Thread.sleep(2000)
 
-                        // Perbaikan penting: Panggil updateBalance dengan 'amount' (jumlah yang harus dikurangkan), bukan 'newBalance'
                         DummySaldoManager.updateBalance(cardId, amount)
                         val newBalance = DummySaldoManager.getBalance(cardId)
+
+                        // === CETAK STRUK KANTIN ===
+                        val itemsForPrint = cartItems.map {
+                            PrintHelper.ReceiptItem(it.menuItem.name, it.quantity, it.menuItem.price.toLong())
+                        }
+                        PrintHelper.printCanteenReceipt(
+                            context = this,
+                            uid = cardId,
+                            items = itemsForPrint,
+                            totalPrice = amount,
+                            balance = newBalance
+                        )
 
                         runOnUiThread {
                             appPreferences.clearCartItems()
@@ -167,12 +151,6 @@ class CartActivity : AppCompatActivity() {
                     cartSection.visibility = View.VISIBLE
                     nfcSection.visibility = View.GONE
                 }
-            } catch (e: Exception) {
-                runOnUiThread {
-                    Toast.makeText(this, "Kesalahan: ${e.message}", Toast.LENGTH_SHORT).show()
-                    cartSection.visibility = View.VISIBLE
-                    nfcSection.visibility = View.GONE
-                }
             } finally {
                 try { rfReader?.close() } catch (_: Exception) {}
             }
@@ -189,7 +167,6 @@ class CartActivity : AppCompatActivity() {
                 .inflate(R.layout.list_item_cart, parent, false)
 
             val item = items[position]
-
             val nameTextView: TextView = view.findViewById(R.id.cart_item_name)
             val priceTextView: TextView = view.findViewById(R.id.cart_item_price)
             val minusButton: Button = view.findViewById(R.id.minus_button)
@@ -202,19 +179,17 @@ class CartActivity : AppCompatActivity() {
 
             minusButton.setOnClickListener {
                 val newQuantity = item.quantity - 1
-                val updatedItems = if (newQuantity > 0) {
+                val updated = if (newQuantity > 0) {
                     items.map { if (it == item) it.copy(quantity = newQuantity) else it }
-                } else {
-                    items.filter { it != item }
-                }
-                appPreferences.saveCartItems(updatedItems)
+                } else items.filter { it != item }
+                appPreferences.saveCartItems(updated)
                 this@CartActivity.loadCartItems()
             }
 
             plusButton.setOnClickListener {
                 val newQuantity = item.quantity + 1
-                val updatedItems = items.map { if (it == item) it.copy(quantity = newQuantity) else it }
-                appPreferences.saveCartItems(updatedItems)
+                val updated = items.map { if (it == item) it.copy(quantity = newQuantity) else it }
+                appPreferences.saveCartItems(updated)
                 this@CartActivity.loadCartItems()
             }
             return view

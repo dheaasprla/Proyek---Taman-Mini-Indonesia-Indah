@@ -4,9 +4,6 @@ import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.view.animation.AlphaAnimation
-import android.view.animation.Animation
-import android.view.animation.ScaleAnimation
 import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
 import com.example.proyektmii.MainActivity
@@ -20,28 +17,13 @@ class OnboardingActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_onboarding)
 
+        // Langsung tampilkan logo (tidak ada animasi)
         val logoTmii: ImageView = findViewById(R.id.logo_tmii)
+        logoTmii.alpha = 1f   // pastikan terlihat
 
-        // Animasi fade-in
-        val fadeIn = AlphaAnimation(0f, 1f)
-        fadeIn.duration = 2000
-        fadeIn.fillAfter = true
-
-        // Animasi scale
-        val scaleUp = ScaleAnimation(
-            0.5f, 1.5f, 0.5f, 1.5f,
-            Animation.RELATIVE_TO_SELF, 0.5f,
-            Animation.RELATIVE_TO_SELF, 0.5f
-        )
-        scaleUp.duration = 2000
-        scaleUp.fillAfter = true
-
-        logoTmii.startAnimation(fadeIn)
-        logoTmii.startAnimation(scaleUp)
-
+        // Pindah ke MainActivity setelah 3 detik
         Handler(Looper.getMainLooper()).postDelayed({
-            val intent = Intent(this, MainActivity::class.java)
-            startActivity(intent)
+            startActivity(Intent(this, MainActivity::class.java))
             finish()
         }, SPLASH_TIME_OUT)
     }

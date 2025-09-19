@@ -30,8 +30,7 @@
     <uses-permission android:name="android.permission.CLOUDPOS_PIN_UPDATE_USER_KEY" />
     <uses-permission android:name="android.permission.CLOUDPOS_PIN_UPDATE_MASTER_KEY" />
 
-    <!-- Kalau device kamu CloudPOS, NFC Android standar biasanya tidak dipakai,
-         tapi saya tetap tambahkan karena di manifest kamu ada -->
+    <!-- NFC (opsional) -->
     <uses-permission android:name="android.permission.NFC"/>
     <uses-feature android:name="android.hardware.nfc" android:required="false" />
 
@@ -45,18 +44,24 @@
         android:theme="@style/AppTheme"
         tools:targetApi="22">
 
-        <!-- Activity utama -->
+        <!-- Jadikan Onboarding sebagai LAUNCHER pertama -->
         <activity
-            android:name=".MainActivity"
+            android:name=".ui.screens.OnboardingActivity"
             android:exported="true"
-            android:launchMode="singleTop">
+            android:theme="@style/AppTheme">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 
-        <!-- Semua activity kamu -->
+        <!-- MainActivity tetap ada, tapi tanpa intent-filter LAUNCHER -->
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:launchMode="singleTop" />
+
+        <!-- Activity lain tetap seperti semula -->
         <activity android:name=".ui.screens.CanteenMenuActivity" android:exported="true" />
         <activity android:name=".ui.screens.CartActivity" android:exported="true" />
         <activity android:name=".ui.screens.CheckBalanceActivity" android:exported="true" />
@@ -69,7 +74,6 @@
         <activity android:name=".ui.screens.PaymentActivity" android:exported="true" />
         <activity android:name=".ui.screens.PaymentSuccessActivity" android:exported="true" />
         <activity android:name=".ui.screens.PintuMasukSuksesActivity" android:exported="true" />
-        <activity android:name=".ui.screens.OnboardingActivity" android:exported="true" />
         <activity android:name=".ui.screens.NfcPaymentActivity" android:exported="true" />
         <activity android:name=".ui.screens.TicketPaymentActivity" android:exported="true" />
 

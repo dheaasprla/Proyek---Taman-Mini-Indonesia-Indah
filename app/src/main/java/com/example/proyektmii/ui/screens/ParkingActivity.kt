@@ -25,8 +25,8 @@ class ParkingActivity : AppCompatActivity() {
         setContentView(R.layout.activity_parking)
 
         statusTextView = findViewById(R.id.status_textview)
-        backButton = findViewById(R.id.back_button_parking)
-        prefs = AppPreferences(this)
+        backButton     = findViewById(R.id.back_button_parking)
+        prefs          = AppPreferences(this)
 
         backButton.setOnClickListener { finish() }
         startCardDetection()
@@ -41,6 +41,7 @@ class ParkingActivity : AppCompatActivity() {
                     .getDevice("cloudpos.device.rfcardreader") as RFCardReaderDevice
                 rfReader?.open(RFCardReaderDevice.MODE_AUTO, 0)
 
+                // tunggu kartu ditempel
                 val result: RFCardReaderOperationResult = rfReader!!.waitForCardPresent(15000)
                 val card: Card? = result.card
 
@@ -61,14 +62,14 @@ class ParkingActivity : AppCompatActivity() {
 
     private fun handleCardTap(uid: String) {
         val entryTime = prefs.getParkingEntryTime()
-        val cardData = prefs.getCardData(uid)
+        val cardData  = prefs.getCardData(uid)
 
         if (entryTime == 0L) {
-            // === Check-in ===
+            // === Check-in (Masuk) ===
             prefs.saveParkingEntryTime(System.currentTimeMillis())
-            // Buat data kartu jika belum ada, saldo tidak akan ditimpa jika sudah ada
             if (cardData == null) {
-                prefs.saveCardData(uid, "Pengunjung", 100000) // default saldo
+                // Buat data kartu jika belum ada
+                prefs.saveCardData(uid, "Pengunjung", 100000)
             }
             val intent = Intent(this, ParkingSuccessActivity::class.java)
             intent.putExtra("uid", uid)
@@ -76,7 +77,7 @@ class ParkingActivity : AppCompatActivity() {
             startActivity(intent)
             finish()
         } else {
-            // === Checkout ===
+            // === Checkout (Keluar) ===
             val exitTime = System.currentTimeMillis()
             val durationMinutes = ((exitTime - entryTime) / 60000).toInt()
             val cost = calculateParkingFee(durationMinutes)
@@ -95,7 +96,7 @@ class ParkingActivity : AppCompatActivity() {
 
     private fun calculateParkingFee(minutes: Int): Int {
         val baseRate = 5000
-        val perHour = 3000
+        val perHour  = 3000
         return if (minutes <= 60) baseRate
         else baseRate + ((minutes - 60) / 60) * perHour
     }

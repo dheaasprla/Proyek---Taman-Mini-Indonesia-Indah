@@ -2,7 +2,6 @@ package com.example.proyektmii.ui.screens
 
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import android.widget.ImageButton
 import android.widget.TextView
@@ -12,7 +11,9 @@ import com.cloudpos.POSTerminal
 import com.cloudpos.rfcardreader.RFCardReaderDevice
 import com.cloudpos.rfcardreader.RFCardReaderOperationResult
 import com.example.proyektmii.R
+import com.example.proyektmii.data.local.AppPreferences
 import com.example.proyektmii.data.local.DummySaldoManager
+import com.example.proyektmii.util.PrintHelper
 import java.text.NumberFormat
 import java.util.Locale
 
@@ -25,7 +26,6 @@ class PaymentActivity : AppCompatActivity() {
     private lateinit var loadingSection: View
 
     private var rfReader: RFCardReaderDevice? = null
-    private val TAG = "PaymentActivity"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -42,7 +42,6 @@ class PaymentActivity : AppCompatActivity() {
 
         backButton.setOnClickListener { onBackPressed() }
 
-        // Memulai proses pembayaran secara otomatis saat layar terbuka
         performPayment(totalPrice)
     }
 
@@ -55,15 +54,6 @@ class PaymentActivity : AppCompatActivity() {
             try {
                 rfReader = POSTerminal.getInstance(this)
                     .getDevice("cloudpos.device.rfcardreader") as RFCardReaderDevice
-
-                if (rfReader == null) {
-                    runOnUiThread {
-                        statusTextView.text = "Error: Perangkat NFC tidak ditemukan."
-                        nfcSection.visibility = View.GONE
-                    }
-                    return@Thread
-                }
-
                 rfReader?.open(RFCardReaderDevice.MODE_AUTO, 0)
                 val result: RFCardReaderOperationResult = rfReader!!.waitForCardPresent(15000)
 
@@ -79,9 +69,22 @@ class PaymentActivity : AppCompatActivity() {
 
                     if (currentBalance >= amount) {
                         Thread.sleep(2000)
-
                         DummySaldoManager.updateBalance(cardId, amount)
                         val newBalance = DummySaldoManager.getBalance(cardId)
+
+                        // === CETAK STRUK DESTINASI ===
+                        val ticket = AppPreferences(this).getTicketItem()
+                        ticket?.let {
+                            PrintHelper.printDestinationReceipt(
+                                context = this,
+                                uid = cardId,
+                                destinationName = it.destination.name,
+                                qty = it.quantity,
+                                price = it.destination.price.toLong(),
+                                total = amount,
+                                balance = newBalance
+                            )
+                        }
 
                         runOnUiThread {
                             statusTextView.text = "Pembayaran berhasil!"
@@ -108,11 +111,6 @@ class PaymentActivity : AppCompatActivity() {
             } catch (e: DeviceException) {
                 runOnUiThread {
                     statusTextView.text = "Error perangkat: ${e.message}"
-                    nfcSection.visibility = View.GONE
-                }
-            } catch (e: Exception) {
-                runOnUiThread {
-                    statusTextView.text = "Kesalahan: ${e.message}"
                     nfcSection.visibility = View.GONE
                 }
             } finally {

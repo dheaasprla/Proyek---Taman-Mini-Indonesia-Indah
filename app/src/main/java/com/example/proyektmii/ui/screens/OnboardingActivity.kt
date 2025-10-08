@@ -17,7 +17,6 @@ class OnboardingActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_onboarding)
 
-        // Langsung tampilkan logo (tidak ada animasi)
         val logoTmii: ImageView = findViewById(R.id.logo_tmii)
         logoTmii.alpha = 1f   // pastikan terlihat
 
